@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 
-	"pokergo/cmd/cli/commands"
-	"pokergo/internal/articles"
-	"pokergo/internal/mongo"
-	"pokergo/pkg/env"
-	"pokergo/pkg/logger"
-	"pokergo/pkg/timer"
+	"whereiseveryone/cmd/cli/commands"
+	"whereiseveryone/internal/mongo"
+	"whereiseveryone/pkg/env"
+	"whereiseveryone/pkg/logger"
+	"whereiseveryone/pkg/timer"
 )
 
 func main() {
@@ -20,15 +19,13 @@ func main() {
 	mongoAuthDB := env.Env("MONGO_AUTH_DB", "admin")
 	mongoUser := env.Env("MONGO_USER", "root")
 	mongoPassword := env.Env("MONGO_PASSWORD", "password123")
-	mongoDB := env.Env("MONGO_DB", "pokergo")
+	mongoDB := env.Env("MONGO_DB", "whereiseveryone")
 	mongoCollections, err := mongo.NewMongo(appCtx, mongoURI, mongoAuthDB, mongoUser, mongoPassword, mongoDB)
 	if err != nil {
-		log.Fatalf("cannot init mongo: %s", err.Error())
+		log.Fatalf("init mongo: %s", err.Error())
 	}
 
-	artsAdapter := articles.NewMongoAdapter(mongoCollections.Arts)
-
-	cmd := commands.NewCommandApp(log, utcTimer, artsAdapter, mongoCollections)
+	cmd := commands.NewCommandApp(log, utcTimer, mongoCollections)
 	if err := cmd.ExecuteContext(appCtx); err != nil {
 		log.Fatal(err)
 	}

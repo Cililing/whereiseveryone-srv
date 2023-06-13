@@ -21,7 +21,7 @@ func FromString(s string) (ID, error) {
 
 	id, err := primitive.ObjectIDFromHex(s)
 	if err != nil {
-		return ZeroID, fmt.Errorf("cannot parse id: %w", err)
+		return ZeroID, fmt.Errorf("parse id: %w", err)
 	}
 	return id, nil
 }

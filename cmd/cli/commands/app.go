@@ -2,10 +2,9 @@ package commands
 
 import (
 	"github.com/spf13/cobra"
-	"pokergo/internal/articles"
-	"pokergo/internal/mongo"
-	"pokergo/pkg/logger"
-	"pokergo/pkg/timer"
+	"whereiseveryone/internal/mongo"
+	"whereiseveryone/pkg/logger"
+	"whereiseveryone/pkg/timer"
 )
 
 type commandApp struct {
@@ -14,32 +13,29 @@ type commandApp struct {
 	logger logger.Logger
 	timer  timer.Timer
 
-	mongoColls  *mongo.Collections
-	artsAdapter articles.Adapter
+	mongoColls *mongo.Collections
 }
 
 func NewCommandApp(
 	lg logger.Logger,
 	tm timer.Timer,
-	artsAdap articles.Adapter,
 	mongoColls *mongo.Collections,
 ) *commandApp {
 	rootCmd := &cobra.Command{
-		Use:   "pokergo",
-		Short: "Some useful commands for pokergo server app",
+		Use:   "wie", // where is everyone abbrv
+		Short: "Some useful commands for where is everyone server app",
 		Long: `
 			The app allows to execute some useful commands,
-  			like "updateArticles" etc.
+  			required to manage the app
 			Can be easily used with k8s-jobs or any other scheduler.
 			`,
 	}
 
 	app := &commandApp{
-		Command:     rootCmd,
-		logger:      lg,
-		timer:       tm,
-		artsAdapter: artsAdap,
-		mongoColls:  mongoColls,
+		Command:    rootCmd,
+		logger:     lg,
+		timer:      tm,
+		mongoColls: mongoColls,
 	}
 
 	dummyCmd := &cobra.Command{
@@ -58,17 +54,8 @@ func NewCommandApp(
 		},
 	}
 
-	fetchArticles := &cobra.Command{
-		Use:   "updateArticles",
-		Short: "Updates articles in database",
-		Run: func(cmd *cobra.Command, args []string) {
-			app.updateArticles()
-		},
-	}
-
 	rootCmd.AddCommand(dummyCmd)
 	rootCmd.AddCommand(mongoIndexes)
-	rootCmd.AddCommand(fetchArticles)
 
 	return app
 }

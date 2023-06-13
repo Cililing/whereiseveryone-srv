@@ -8,9 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"pokergo/pkg/id"
-	"pokergo/pkg/logger"
-	"pokergo/pkg/pointers"
+	"whereiseveryone/pkg/id"
+	"whereiseveryone/pkg/logger"
+	"whereiseveryone/pkg/pointers"
 )
 
 type User struct {
@@ -67,7 +67,7 @@ func (m *mongoAdapter) EnsureIndexes(ctx context.Context) error {
 
 	_, err := m.coll.Indexes().CreateOne(ctx, userIDIdx)
 	if err != nil {
-		return fmt.Errorf("cannot create unique name:1 index: %w", err)
+		return fmt.Errorf("create unique name:1 index: %w", err)
 	}
 
 	return nil
@@ -77,7 +77,7 @@ func (m *mongoAdapter) NewUser(ctx context.Context, user User) (User, error) {
 	user.ID = id.NewID()
 	_, err := m.coll.InsertOne(ctx, user)
 	if err != nil {
-		return User{}, fmt.Errorf("cannot create a new user: %w", err)
+		return User{}, fmt.Errorf("create a new user: %w", err)
 	}
 
 	return user, nil
@@ -90,12 +90,12 @@ func (m *mongoAdapter) GetUserByName(ctx context.Context, name string) (User, er
 
 	res := m.coll.FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
-		return User{}, fmt.Errorf("cannot perform query: %w", err)
+		return User{}, fmt.Errorf("perform query: %w", err)
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return User{}, fmt.Errorf("cannot decode query result: %w", err)
+		return User{}, fmt.Errorf("decode query result: %w", err)
 	}
 
 	return user, nil
@@ -108,12 +108,12 @@ func (m *mongoAdapter) GetUserByID(ctx context.Context, id id.ID) (User, error) 
 
 	res := m.coll.FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
-		return User{}, fmt.Errorf("cannot perform query: %w", err)
+		return User{}, fmt.Errorf("perform query: %w", err)
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return User{}, fmt.Errorf("cannot decode query result: %w", err)
+		return User{}, fmt.Errorf("decode query result: %w", err)
 	}
 
 	return user, nil
@@ -127,12 +127,12 @@ func (m *mongoAdapter) UserDetails(ctx context.Context, ids []id.ID) (map[id.ID]
 	}
 	c, err := m.coll.Find(ctx, filter)
 	if err != nil {
-		return nil, fmt.Errorf("cannot perform find query: %w", err)
+		return nil, fmt.Errorf("perform find query: %w", err)
 	}
 
 	var users []User
 	if err := c.All(ctx, &users); err != nil {
-		return nil, fmt.Errorf("cannot decode query result: %w", err)
+		return nil, fmt.Errorf("decode query result: %w", err)
 	}
 
 	res := make(map[id.ID]User, len(users))
@@ -165,7 +165,7 @@ func (m *mongoAdapter) UpdateTokens(ctx context.Context, userID id.ID, token, re
 
 	_, err := m.coll.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return fmt.Errorf("cannot update tokens: %w", err)
+		return fmt.Errorf("update tokens: %w", err)
 	}
 
 	return nil
