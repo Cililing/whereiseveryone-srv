@@ -30,9 +30,14 @@ type User struct {
 	CreatedAt time.Time `bson:"created_at"`
 	// UpdatedAt tells when the last update was done
 	UpdatedAt time.Time `bson:"updated_at"`
+
+	// Location user last location (can be nil)
+	Location *Location `bson:"location"`
 }
 
 type Adapter interface {
+	LocationAdapter
+
 	NewUser(ctx context.Context, user User) (User, error)
 	GetUserByName(ctx context.Context, name string) (User, error)
 	GetUserByID(ctx context.Context, id id.ID) (User, error)
@@ -46,12 +51,15 @@ type Adapter interface {
 var ErrUserNotExists = mongo.ErrNoDocuments
 
 type mongoAdapter struct {
+	LocationAdapter
+
 	coll   *mongo.Collection
 	logger logger.Logger
 }
 
 func NewMongoAdapter(coll *mongo.Collection, logger logger.Logger) *mongoAdapter {
-	return &mongoAdapter{coll, logger}
+	locationAdapter := mongoLocationAdapter{coll, logger}
+	return &mongoAdapter{locationAdapter, coll, logger}
 }
 
 func (m *mongoAdapter) EnsureIndexes(ctx context.Context) error {

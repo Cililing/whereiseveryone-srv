@@ -10,6 +10,7 @@ import (
 	"whereiseveryone/internal/users"
 	"whereiseveryone/internal/webapi"
 	authMux "whereiseveryone/internal/webapi/auth"
+	locationMux "whereiseveryone/internal/webapi/location"
 	"whereiseveryone/pkg/env"
 	"whereiseveryone/pkg/jwt"
 	"whereiseveryone/pkg/logger"
@@ -37,6 +38,7 @@ func main() {
 	jwtSecret := env.Env("JWT_SECRET", "jwt-token-123")
 	jwtInstance := jwt.NewJWT(utcTimer, []byte(jwtSecret), time.Duration(168)*time.Hour)
 	authRouter := authMux.NewMux(usersAdapter, utcTimer, jwtInstance)
+	locationRouter := locationMux.NewMux()
 
 	isDebug := env.Env("DEBUG", "true")
 	validate := validator.New()
@@ -44,7 +46,8 @@ func main() {
 		validate,
 		jwtInstance,
 		webapi.EchoRouters{
-			AuthRouter: authRouter,
+			AuthRouter:     authRouter,
+			LocationRouter: locationRouter,
 		},
 		log,
 		isDebug == "true")
