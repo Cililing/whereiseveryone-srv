@@ -39,6 +39,7 @@ type EchoRouters struct {
 }
 
 func NewEcho(
+	basePath string,
 	validate *validator.Validate,
 	jwtInstance *jwt.JWT,
 	routers EchoRouters,
@@ -70,8 +71,10 @@ func NewEcho(
 		}
 	}
 
-	authRouter := e.Group("/auth")
-	locationRouter := e.Group("/location", authMiddleware)
+	basePathGroup := e.Group(basePath)
+
+	authRouter := basePathGroup.Group("/auth")
+	locationRouter := basePathGroup.Group("/location", authMiddleware)
 
 	routers.AuthRouter.Route(authRouter, authMiddleware)
 	routers.LocationRouter.Route(locationRouter, authMiddleware)

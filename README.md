@@ -39,6 +39,14 @@ To run app in development, at first run MongoDB docker container:
 
 This command will run the mongodb container with root user: `root:password123` on port 27017
 
+# Documentation
+
+Docs are served in /swagger endpoint.
+Ref: https://github.com/swaggo/echo-swagger
+
+For generating docs (required each time something is changed) `swag init -g cmd/server/main.go` 
+and commit it to the repository.
+
 ## Binding Requests
 
 There is a very useful generic function that binds the HTTP request and validates it.
