@@ -2,9 +2,9 @@ package binder
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"time"
+	"whereiseveryone/internal/webapi/jsonErr"
 
 	"github.com/labstack/echo/v4"
 	"whereiseveryone/internal/webapi"
@@ -62,7 +62,7 @@ type StructValidator interface {
 func BindRequest[T any](
 	c echo.Context,
 	requireAuth bool,
-) (*Context[T], *BindError) {
+) (*Context[T], error) {
 	result := &Context[T]{
 		echo: c,
 	}
@@ -76,11 +76,11 @@ func BindRequest[T any](
 	if requireAuth {
 		jwtToken, err := webapi.GetJWTToken(c)
 		if err != nil {
-			return result, &BindError{403, "jwt token invalid"}
+			return result, jsonErr.EchoForbiddenError(c)
 		}
 		requesterID, err := id.FromString(jwtToken.ID)
 		if err != nil {
-			return result, &BindError{400, fmt.Sprintf("invalid user id: %s", err)}
+			return result, jsonErr.EchoInvalidRequestError(c, err)
 		}
 		result.userID = requesterID
 		result.tokenData = jwtToken
@@ -88,12 +88,12 @@ func BindRequest[T any](
 
 	// Obtain request
 	if err := c.Bind(&t); err != nil {
-		return result, &BindError{400, fmt.Sprintf("invalid request: %s", err.Error())}
+		return result, jsonErr.EchoInvalidRequestError(c, err)
 	}
 
 	if val := reflect.ValueOf(t); val.Kind() == reflect.Struct { // don't validate interface{} type
 		if err := c.Validate(t); err != nil {
-			return result, &BindError{400, fmt.Sprintf("invalid request: %s", err.Error())}
+			return result, jsonErr.EchoInvalidRequestError(c, err)
 		}
 	}
 

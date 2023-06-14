@@ -26,10 +26,6 @@ func (m *mux) Route(g *echo.Group, _ echo.MiddlewareFunc) {
 	g.POST("/fetch", m.fetchLocation)
 }
 
-// updateLocation
-// @Summary updates user location
-// @Tags Location
-// @Router /update [POST]
 func (m *mux) updateLocation(c echo.Context) error {
 	panic("not implemented")
 	return nil
