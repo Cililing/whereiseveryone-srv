@@ -42,6 +42,7 @@ func (m *mux) Route(g *echo.Group, _ echo.MiddlewareFunc) {
 // @param userDetails body signUpRequest true "sign up details"
 // @success 200 {object} authResponse
 // @failure 400 {object} jsonErr.JsonError "invalid request"
+// @failure 409 {object} jsonErr.JsonError "conflict (user with such a name exists)
 // @failure 500 {object} jsonErr.JsonError "internal server error"
 // @router /auth/signup [POST]
 func (m *mux) signUp(c echo.Context) error {
@@ -74,6 +75,10 @@ func (m *mux) signUp(c echo.Context) error {
 	}
 
 	if u, err = m.userAdapter.NewUser(reqCtx, u); err != nil { // overwrite user for ID and generated data
+		if errors.Is(err, users.ErrUserNameAlreadyExists) {
+			return jsonErr.EchoConflictError(c, err)
+		}
+
 		return jsonErr.EchoInternalError(c, err)
 	}
 

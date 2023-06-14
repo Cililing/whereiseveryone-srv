@@ -41,3 +41,7 @@ func EchoInternalError(c echo.Context, err error) error {
 func EchoForbiddenError(c echo.Context) error {
 	return EchoError(c, 403, "forbidden", nil)
 }
+
+func EchoConflictError(c echo.Context, err error) error {
+	return EchoError(c, 409, "conflict", err)
+}

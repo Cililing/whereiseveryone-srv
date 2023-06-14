@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const timeout = time.Duration(30) * time.Second
+
 type Indexable interface {
 	EnsureIndexes(ctx context.Context) error
 }
@@ -17,14 +19,18 @@ type Collections struct {
 	Users *mongo.Collection
 }
 
-func NewMongo(ctx context.Context, uri, authDB, user, pass, db string) (*Collections, error) {
+func NewMongoWithPassword(ctx context.Context, db, uri, authDB, user, pass string) (*Collections, error) {
 	opts := options.Client().ApplyURI(uri)
+	opts.SetServerSelectionTimeout(timeout)
 	opts.SetAuth(options.Credential{
 		AuthSource: authDB,
 		Username:   user,
 		Password:   pass,
 	})
-	opts.SetServerSelectionTimeout(time.Duration(30) * time.Second)
+	return newMongo(ctx, db, opts)
+}
+
+func newMongo(ctx context.Context, db string, opts *options.ClientOptions) (*Collections, error) {
 
 	cl, err := mongo.NewClient(opts)
 	if err != nil {
