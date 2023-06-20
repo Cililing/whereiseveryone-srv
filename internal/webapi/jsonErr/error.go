@@ -8,12 +8,14 @@ import (
 type JsonError struct {
 	// Message is human friendly error message
 	Message string `json:"message"`
+	// Code is desired http code for this error
+	Code int `json:"code"`
 	// Err is a golang error returned by the app
 	// It is removed in production application (TBD)
 	Err error `json:"error" swaggertype:"string"`
 }
 
-func (h JsonError) Error() string {
+func (h *JsonError) Error() string {
 	if h.Err != nil {
 		return fmt.Sprintf("%s: %s", h.Message, h.Err)
 	}
@@ -21,27 +23,31 @@ func (h JsonError) Error() string {
 	return fmt.Sprintf("%s", h.Message)
 }
 
-func EchoError(c echo.Context, code int, message string, err error) error {
-	httpErr := JsonError{message, err}
-	return c.JSON(code, httpErr)
+func (h *JsonError) Echo(context echo.Context) error {
+	return context.JSON(h.Code, h)
 }
 
-func EchoInvalidRequestError(c echo.Context, err error) error {
-	return EchoError(c, 400, "invalid request", err)
+func EchoError(code int, message string, err error) *JsonError {
+	httpErr := JsonError{message, code, err}
+	return &httpErr
 }
 
-func EchoNotFoundError(c echo.Context, err error) error {
-	return EchoError(c, 404, "not found", err)
+func EchoInvalidRequestError(err error) *JsonError {
+	return EchoError(400, "invalid request", err)
 }
 
-func EchoInternalError(c echo.Context, err error) error {
-	return EchoError(c, 500, "internal error", err)
+func EchoNotFoundError(err error) *JsonError {
+	return EchoError(404, "not found", err)
 }
 
-func EchoForbiddenError(c echo.Context) error {
-	return EchoError(c, 403, "forbidden", nil)
+func EchoInternalError(err error) *JsonError {
+	return EchoError(500, "internal error", err)
 }
 
-func EchoConflictError(c echo.Context, err error) error {
-	return EchoError(c, 409, "conflict", err)
+func EchoForbiddenError() *JsonError {
+	return EchoError(403, "forbidden", nil)
+}
+
+func EchoConflictError(err error) *JsonError {
+	return EchoError(409, "conflict", err)
 }

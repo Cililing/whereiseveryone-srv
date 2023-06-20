@@ -59,10 +59,11 @@ type StructValidator interface {
 
 // BindRequest bind requests returning Context, user data (if requireAuth) and an error.
 // T must be a simple type to be validated (pointers are not validated).
+// Binder returns an jsonErr.JsonError but it doesn't bind the error.
 func BindRequest[T any](
 	c echo.Context,
 	requireAuth bool,
-) (*Context[T], error) {
+) (*Context[T], *jsonErr.JsonError) {
 	result := &Context[T]{
 		echo: c,
 	}
@@ -76,11 +77,11 @@ func BindRequest[T any](
 	if requireAuth {
 		jwtToken, err := webapi.GetJWTToken(c)
 		if err != nil {
-			return result, jsonErr.EchoForbiddenError(c)
+			return result, jsonErr.EchoForbiddenError()
 		}
 		requesterID, err := id.FromString(jwtToken.ID)
 		if err != nil {
-			return result, jsonErr.EchoInvalidRequestError(c, err)
+			return result, jsonErr.EchoInvalidRequestError(err)
 		}
 		result.userID = requesterID
 		result.tokenData = jwtToken
@@ -88,12 +89,12 @@ func BindRequest[T any](
 
 	// Obtain request
 	if err := c.Bind(&t); err != nil {
-		return result, jsonErr.EchoInvalidRequestError(c, err)
+		return result, jsonErr.EchoInvalidRequestError(err)
 	}
 
 	if val := reflect.ValueOf(t); val.Kind() == reflect.Struct { // don't validate interface{} type
 		if err := c.Validate(t); err != nil {
-			return result, jsonErr.EchoInvalidRequestError(c, err)
+			return result, jsonErr.EchoInvalidRequestError(err)
 		}
 	}
 

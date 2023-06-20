@@ -15,9 +15,6 @@ type updateLocationRequest struct {
 	Latitude  float64 `json:"latitude" validate:"required,longitude"`
 }
 
-// marker, empty response
-type updateLocationResponse string
-
 type fetchRequest struct {
 	UserIDs []string `json:"uuids"`
 	Nicks   []string `json:"nicks"`

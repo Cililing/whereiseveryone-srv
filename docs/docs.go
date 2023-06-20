@@ -123,6 +123,96 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/location/fetch": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "fetches users location",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "location"
+                ],
+                "summary": "returns location of provided users",
+                "parameters": [
+                    {
+                        "description": "arrays of ids or nicks",
+                        "name": "fetchLocation",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/location.fetchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "list of user",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/location.userLocation"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/jsonErr.JsonError"
+                        }
+                    }
+                }
+            }
+        },
+        "/location/update": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "updates user's location",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "location"
+                ],
+                "summary": "update user's location",
+                "parameters": [
+                    {
+                        "description": "location",
+                        "name": "locationUpdate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/location.updateLocationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/jsonErr.JsonError"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/jsonErr.JsonError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -186,6 +276,10 @@ const docTemplate = `{
         "jsonErr.JsonError": {
             "type": "object",
             "properties": {
+                "code": {
+                    "description": "Code is desired http code for this error",
+                    "type": "integer"
+                },
                 "error": {
                     "description": "Err is a golang error returned by the app\nIt is removed in production application (TBD)",
                     "type": "string"
@@ -195,6 +289,65 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "location.fetchRequest": {
+            "type": "object",
+            "properties": {
+                "nicks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "uuids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "location.updateLocationRequest": {
+            "type": "object",
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                }
+            }
+        },
+        "location.userLocation": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "last_update": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "nick": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
