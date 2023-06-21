@@ -21,7 +21,6 @@ func NewJWT(timer timer.Timer, secret []byte, validity time.Duration) *JWT {
 }
 
 type SignedToken struct {
-	Email    string
 	UserName string
 	ID       string
 
@@ -30,9 +29,8 @@ type SignedToken struct {
 
 var ErrTokenExpired = errors.New("token is expired")
 
-func (j JWT) GenerateTokens(email, username string, id id.ID) (string, string, error) {
+func (j JWT) GenerateTokens(username string, id id.ID) (string, string, error) {
 	claims := SignedToken{
-		Email:    email,
 		UserName: username,
 		ID:       id.Hex(),
 		StandardClaims: jwt.StandardClaims{

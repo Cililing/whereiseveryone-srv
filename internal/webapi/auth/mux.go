@@ -66,7 +66,6 @@ func (m *mux) signUp(c echo.Context) error {
 		ID:           id.ID{}, // stub
 		Username:     request.Name,
 		Password:     encPass,
-		Email:        request.Email,
 		Token:        "",
 		RefreshToken: "",
 		CreatedAt:    m.timer.Now(),
@@ -82,7 +81,7 @@ func (m *mux) signUp(c echo.Context) error {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}
 
-	token, refresh, err := m.jwt.GenerateTokens(u.Email, u.Username, u.ID)
+	token, refresh, err := m.jwt.GenerateTokens(u.Username, u.ID)
 	if err != nil {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}
@@ -136,7 +135,7 @@ func (m *mux) logIn(c echo.Context) error {
 		return jsonerr.EchoForbiddenError().Echo(c)
 	}
 
-	token, refresh, err := m.jwt.GenerateTokens(u.Email, u.Username, u.ID)
+	token, refresh, err := m.jwt.GenerateTokens(u.Username, u.ID)
 	if err != nil {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}

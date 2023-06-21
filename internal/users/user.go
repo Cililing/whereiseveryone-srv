@@ -19,8 +19,6 @@ type User struct {
 	ID id.ID `bson:"_id"` //nolint:tagliatelle // mongo-id
 	// Username is a unique name of player (nick), used for login as well
 	Username string `bson:"name"`
-	// Email is user email
-	Email string `bson:"email"`
 	// Password is an encrypted password
 	Password string `bson:"password"`
 	// Token is a jwt-token
