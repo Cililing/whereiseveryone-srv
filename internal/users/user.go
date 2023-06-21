@@ -16,7 +16,7 @@ import (
 
 type User struct {
 	// ID is internal ID
-	ID id.ID `bson:"_id"` // nolint:tagliatelle // mongo-id
+	ID id.ID `bson:"_id"` //nolint:tagliatelle // mongo-id
 	// Username is a unique name of player (nick), used for login as well
 	Username string `bson:"name"`
 	// Email is user email

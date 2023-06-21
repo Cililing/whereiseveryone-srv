@@ -19,7 +19,6 @@ linters:
     - bidichk
     - bodyclose
     - contextcheck
-    - depguard
     - dupl
     - durationcheck
     - errname
@@ -28,7 +27,8 @@ linters:
     - exportloopref
     - forbidigo
     - forcetypeassert
-    - gci
+    # TODO: decide about import order and enable the linter
+    # - gci
     - gochecknoglobals
     - gochecknoinits
     - goconst
@@ -110,9 +110,11 @@ linters-settings:
       - .WithStack(
       - multierr.Append(
       - multierr.Combine(
+      - (*whereiseveryone/internal/webapi/jsonerr.JSONError).Echo(
       - endpoints. # this is returned to the client and handled by the framework
       - (github.com/labstack/echo/v4.Context).JSON( # echo
       - (github.com/labstack/echo/v4.Context).String(
+      - (github.com/labstack/echo/v4.Context).NoContent(
   revive:
     confidence: 0.8
     enable-all-rules: false

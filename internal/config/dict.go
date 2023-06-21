@@ -4,14 +4,15 @@ import "whereiseveryone/pkg/env"
 
 const (
 	ConfMongoUseCloud env.Key = "mongo.useCloud" // required
-	ConfMongoUri              = "mongo.uri"      // required
-	ConfMongoAuthDb           = "mongo.authDb"   // required for local-db
-	ConfMongoUser             = "mongo.user"     // required for local-db
-	ConfMongoPassword         = "mongo.password" // required for local-db
-	ConfMongoDb               = "mongo.db"       // required
-	ConfMongoX509             = "mongo.x509"     // required for cloud
+	ConfMongoURI      env.Key = "mongo.uri"      // required
+	ConfMongoAuthDb   env.Key = "mongo.authDb"   // required for local-db
+	ConfMongoUser     env.Key = "mongo.user"     // required for local-db
+	ConfMongoPassword env.Key = "mongo.password" // required for local-db
+	ConfMongoDb       env.Key = "mongo.db"       // required
+	ConfMongoX509     env.Key = "mongo.x509"     // required for cloud
 
-	ConfJwtSecret = "app.jwtSecret" // required
-	ConfDebug     = "app.debug"     // required
-	ConfAppPort   = "app.port"      // required
+	//nolint:gosec // not a credential
+	ConfJwtSecret env.Key = "app.jwtSecret" // required
+	ConfDebug     env.Key = "app.debug"     // required
+	ConfAppPort   env.Key = "app.port"      // required
 )

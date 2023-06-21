@@ -8,7 +8,7 @@ import (
 
 type ID = primitive.ObjectID
 
-var ZeroID = [12]byte{} // nolint:gochecknoglobals // cannot be const
+var ZeroID = [12]byte{} //nolint:gochecknoglobals // cannot be const
 
 func NewID() ID {
 	return primitive.NewObjectID()

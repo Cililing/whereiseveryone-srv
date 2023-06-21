@@ -4,7 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"whereiseveryone/internal/users"
 	"whereiseveryone/internal/webapi/binder"
-	"whereiseveryone/internal/webapi/jsonErr"
+	"whereiseveryone/internal/webapi/jsonerr"
 	"whereiseveryone/pkg/id"
 	"whereiseveryone/pkg/logger"
 	"whereiseveryone/pkg/timer"
@@ -46,8 +46,8 @@ func (m *mux) Route(g *echo.Group, _ echo.MiddlewareFunc) {
 // @security Bearer
 // @param locationUpdate body updateLocationRequest true "location"
 // @success 204
-// @failure 400 {object} jsonErr.JsonError "invalid request"
-// @failure 500 {object} jsonErr.JsonError "internal server error"
+// @failure 400 {object} jsonerr.JSONError "invalid request"
+// @failure 500 {object} jsonerr.JSONError "internal server error"
 // @router /location/update [POST]
 func (m *mux) updateLocation(c echo.Context) error {
 	request, bindErr := binder.BindRequest[updateLocationRequest](c, true)
@@ -66,7 +66,7 @@ func (m *mux) updateLocation(c echo.Context) error {
 	})
 
 	if err != nil {
-		return jsonErr.EchoInternalError(err).Echo(c)
+		return jsonerr.EchoInternalError(err).Echo(c)
 	}
 
 	return c.NoContent(204)
@@ -82,7 +82,7 @@ func (m *mux) updateLocation(c echo.Context) error {
 // @security Bearer
 // @param fetchLocation body fetchRequest true "arrays of ids or nicks"
 // @success 200 {object} fetchUserResponse "list of user"
-// @failure 500 {object} jsonErr.JsonError "internal server error"
+// @failure 500 {object} jsonerr.JSONError "internal server error"
 // @router /location/fetch [POST]
 func (m *mux) fetchLocation(c echo.Context) error {
 	request, bindErr := binder.BindRequest[fetchRequest](c, true)
@@ -94,19 +94,21 @@ func (m *mux) fetchLocation(c echo.Context) error {
 	requestData := request.Request
 	idsFromNames, err := m.usersAdapter.TranslateNamesToIDs(request.Context(), requestData.Nicks)
 	if err != nil {
-		return jsonErr.EchoInternalError(err).Echo(c)
+		return jsonerr.EchoInternalError(err).Echo(c)
 	}
 
 	var idsFromRequest []id.ID
 	for _, rawID := range requestData.UserIDs {
+		//nolint:errcheck // ignore on purpose
 		parsedID, _ := id.FromString(rawID)
 		idsFromRequest = append(idsFromRequest, parsedID)
 	}
 
+	//nolint:gocritic // a new slice on purpose
 	allIds := append(idsFromNames, idsFromRequest...)
 	userDetails, err := m.usersAdapter.UsersDetails(request.Context(), allIds)
 	if err != nil {
-		return jsonErr.EchoInternalError(err).Echo(c)
+		return jsonerr.EchoInternalError(err).Echo(c)
 	}
 
 	var res fetchUserResponse

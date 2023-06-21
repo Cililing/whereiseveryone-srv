@@ -3,7 +3,6 @@ package env
 import "os"
 
 type osHandler struct {
-	provider func(key Key, def string) string
 }
 
 // NewOsHandler returns a default, os-env based handler
