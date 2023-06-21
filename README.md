@@ -1,6 +1,44 @@
-# Run...
+# Run
 
-## TODO
+## Go
+
+It's a standard go app. You can run it using `go run` etc.
+
+## Config
+
+App uses json-config. The config MUST be a JSON with **only string** entries.
+As a default `./.env/local.json` is used. You can override it with a flag `--config=$filePath`
+
+## Docker
+
+To build a image locally run: `docker build -t whereiseveryone-srv:latest -f docker/Dockerfile .` in project root.
+The command will build the container and will append local `./.env` directory. It can be overwritten later.
+
+If you want to use local-running mongo (see section `Development/Mongo` below) in docker a network must be created at
+first.
+
+```
+docker network create whereiseveryone-net
+docker network connect whereiseveryone-net mongodb
+```
+
+Then, to run an image:
+
+```
+docker run \
+    -p 127.0.0.1:8080:8080/tcp \
+    --network=whereiseveryone-net \
+    -v "`pwd`/.env:/app/.env" \
+    whereiseveryone-srv \
+    /bin/sh -c "/app/app-srv -config=/app/.env/docker.json"
+```
+
+The command:
+
+* `-p` binds docker to your localhost on port 8080
+* `--network` connects the container to the network (required for connecting with local-docker mongo)
+* `-v` binds local `./env` directory to container `.env` directory
+* `/bin/sh -c ...` command for running the srv with docker-config file
 
 # Authorization
 
