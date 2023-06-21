@@ -19,6 +19,19 @@ type Collections struct {
 	Users *mongo.Collection
 }
 
+func NewMongoWithX509Pem(ctx context.Context, db, uri, tlsCertPath string) (*Collections, error) {
+	connStr := "mongodb+srv://" +
+		uri +
+		"/?authSource=%24external&authMechanism=" +
+		"MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=" +
+		tlsCertPath
+
+	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
+	clientOptions := options.Client().ApplyURI(connStr).SetServerAPIOptions(serverAPIOptions)
+
+	return newMongo(ctx, db, clientOptions)
+}
+
 func NewMongoWithPassword(ctx context.Context, db, uri, authDB, user, pass string) (*Collections, error) {
 	opts := options.Client().ApplyURI(uri)
 	opts.SetServerSelectionTimeout(timeout)

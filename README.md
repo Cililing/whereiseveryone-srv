@@ -39,12 +39,24 @@ To run app in development, at first run MongoDB docker container:
 
 This command will run the mongodb container with root user: `root:password123` on port 27017
 
+## Config
+
+To see a list of available config keys please see `/internal/config/dict.go`.
+For local development use `./.env/local.json` file.
+
+_To replace a config you need to edit main.go files to point a proper one_
+
+## Using cloud db
+
+At first, you need to generate a X509 certificate from Mongo Atlas. **Keep it secret!**
+Put it in `.env` directory and then use a config from `./.env/cloud.json`
+
 # Documentation
 
 Docs are served in /swagger endpoint.
 Ref: https://github.com/swaggo/echo-swagger
 
-For generating docs (required each time something is changed) `swag init -g cmd/server/main.go` 
+For generating docs (required each time something is changed) `swag init -g cmd/server/main.go`
 and commit it to the repository.
 
 ## Binding Requests
@@ -55,17 +67,27 @@ There is a very useful generic function that binds the HTTP request and validate
 package request
 
 func echoFunc(c echo.Context) error {
-	data, bindErr := binder.BindRequest[bodyType, queryType](c, true)
+	data, bindErr := binder.BindRequest[bodyType](c, true)
 	if bindErr != nil {
 		return c.String(bindErr.Code, bindErr.Message)
 	}
 	defer data.Cancel()
 
-	// to access the body/query use:
-	data.Request // binds basing on json-tags and validate-tags
-	data.Query   // TBD
-
 	return c.String(200, "ok")
+}
+```
+
+`BindRequest` returns an object implementing the interface
+
+```go
+package request
+
+type BaseContext interface {
+	Context() context.Context
+	Cancel() context.CancelFunc
+	Echo() echo.Context
+	UserID() id.ID
+	TokenData() jwt.SignedToken
 }
 ```
 

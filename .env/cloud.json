@@ -1,0 +1,9 @@
+{
+  "app.jwtSecret": "jwt-token-123",
+  "app.debug": "true",
+  "app.port": "7070",
+  "mongo.useCloud": "true",
+  "mongo.uri": "whereiseveryone-db.kxdr7jb.mongodb.net",
+  "mongo.x509": "./.env/X509-cert.pem",
+  "mongo.db": "whereiseveryone-db"
+}

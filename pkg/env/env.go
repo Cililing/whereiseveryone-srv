@@ -1,11 +1,16 @@
 package env
 
-import "os"
+type Key string
 
-func Env(name string, def string) string {
-	if e, ok := os.LookupEnv(name); ok {
-		return e
+type Handler interface {
+	Env(key Key, def string) string
+	MustEnv(key Key) string
+}
+
+func NewHandler(filePath string) (Handler, error) {
+	if filePath == "" {
+		return NewOsHandler()
 	}
 
-	return def
+	return NewJsonHandler(filePath)
 }
