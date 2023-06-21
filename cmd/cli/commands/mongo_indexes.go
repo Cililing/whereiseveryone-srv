@@ -1,11 +1,15 @@
 package commands
 
 import (
+	"context"
 	"whereiseveryone/internal/users"
 )
 
-func (c *commandApp) mongoIndexes() {
-	usersAdapter := users.NewMongoAdapter(c.mongoColls.Users, c.logger)
+func (c *commandApp) mongoIndexes(ctx context.Context) {
+	envHandler := c.mustGetEnvHandler()
+	mongoCollections := c.mustGetMongoCollections(ctx, envHandler)
+
+	usersAdapter := users.NewMongoAdapter(mongoCollections.Users, c.logger)
 	if err := usersAdapter.EnsureIndexes(c.Context()); err != nil {
 		c.logger.Fatalf("create indexes on users collection: %s", err.Error())
 	}

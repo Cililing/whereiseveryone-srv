@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"context"
 	"github.com/spf13/cobra"
 	"whereiseveryone/internal/mongo"
+	"whereiseveryone/pkg/env"
 	"whereiseveryone/pkg/logger"
 	"whereiseveryone/pkg/timer"
 )
@@ -12,17 +14,14 @@ type commandApp struct {
 
 	logger logger.Logger
 	timer  timer.Timer
-
-	mongoColls *mongo.Collections
 }
 
 func NewCommandApp(
 	lg logger.Logger,
 	tm timer.Timer,
-	mongoColls *mongo.Collections,
 ) *commandApp {
 	rootCmd := &cobra.Command{
-		Use:   "wie", // where is everyone abbrv
+		Use:   "cli",
 		Short: "Some useful commands for where is everyone server app",
 		Long: `
 			The app allows to execute some useful commands,
@@ -31,11 +30,12 @@ func NewCommandApp(
 			`,
 	}
 
+	rootCmd.PersistentFlags().String("config", "./env/local.json", "path to config file")
+
 	app := &commandApp{
-		Command:    rootCmd,
-		logger:     lg,
-		timer:      tm,
-		mongoColls: mongoColls,
+		Command: rootCmd,
+		logger:  lg,
+		timer:   tm,
 	}
 
 	dummyCmd := &cobra.Command{
@@ -50,7 +50,7 @@ func NewCommandApp(
 		Use:   "mongoIndexes",
 		Short: "sets mongo indexes (must be run after each index change)",
 		Run: func(cmd *cobra.Command, args []string) {
-			app.mongoIndexes()
+			app.mongoIndexes(cmd.Context())
 		},
 	}
 
@@ -58,4 +58,22 @@ func NewCommandApp(
 	rootCmd.AddCommand(mongoIndexes)
 
 	return app
+}
+
+func (c *commandApp) mustGetEnvHandler() env.Handler {
+	config := c.Flag("config")
+	configPath := config.Value.String()
+	envHandler, err := env.NewHandler(configPath)
+	if err != nil {
+		c.logger.Fatalf("getting env handler: %s", err.Error())
+	}
+	return envHandler
+}
+
+func (c *commandApp) mustGetMongoCollections(ctx context.Context, envHandler env.Handler) *mongo.Collections {
+	mongoCollections, err := mongo.GetMongo(ctx, envHandler)
+	if err != nil {
+		c.logger.Fatalf("connecting with mongo: %s", err.Error())
+	}
+	return mongoCollections
 }
