@@ -1,8 +1,8 @@
 package jsonerr
 
 import (
+	"encoding/json"
 	"fmt"
-
 	"github.com/labstack/echo/v4"
 )
 
@@ -16,7 +16,24 @@ type JSONError struct {
 	Err error `json:"error" swaggertype:"string"`
 }
 
-func (h *JSONError) Error() string {
+func (h JSONError) MarshalJSON() ([]byte, error) {
+	var errMsg string
+	if h.Err != nil {
+		errMsg = h.Err.Error()
+	}
+
+	return json.Marshal(&struct {
+		Message string `json:"message"`
+		Code    int    `json:"code"`
+		Error   string `json:"error"`
+	}{
+		Message: h.Message,
+		Code:    h.Code,
+		Error:   errMsg,
+	})
+}
+
+func (h JSONError) Error() string {
 	if h.Err != nil {
 		return fmt.Sprintf("%s: %s", h.Message, h.Err)
 	}
@@ -24,7 +41,7 @@ func (h *JSONError) Error() string {
 	return h.Message
 }
 
-func (h *JSONError) Echo(context echo.Context) error {
+func (h JSONError) Echo(context echo.Context) error {
 	return context.JSON(h.Code, h)
 }
 
