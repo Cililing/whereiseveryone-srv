@@ -34,9 +34,9 @@ func GetJWTToken(c echo.Context) (jwt.SignedToken, error) {
 }
 
 type EchoRouters struct {
-	Swagger        echo.HandlerFunc
-	AuthRouter     Router
-	LocationRouter Router
+	Swagger    echo.HandlerFunc
+	AuthRouter Router
+	MeRouter   Router
 }
 
 func NewEcho(
@@ -76,10 +76,10 @@ func NewEcho(
 
 	e.GET("/swagger/*", routers.Swagger)
 	authRouter := basePathGroup.Group("/auth")
-	locationRouter := basePathGroup.Group("/location", authMiddleware)
+	meRouter := basePathGroup.Group("/me")
 
 	routers.AuthRouter.Route(authRouter, authMiddleware)
-	routers.LocationRouter.Route(locationRouter, authMiddleware)
+	routers.MeRouter.Route(meRouter, authMiddleware)
 
 	e.GET("health", func(c echo.Context) error {
 		return c.JSON(200, "ok")

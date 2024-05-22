@@ -13,7 +13,7 @@ import (
 	"whereiseveryone/internal/users"
 	"whereiseveryone/internal/webapi"
 	authMux "whereiseveryone/internal/webapi/auth"
-	locationMux "whereiseveryone/internal/webapi/location"
+	meMux "whereiseveryone/internal/webapi/me"
 	"whereiseveryone/pkg/env"
 	"whereiseveryone/pkg/jwt"
 	"whereiseveryone/pkg/logger"
@@ -56,6 +56,7 @@ func main() {
 	mongoCollections, err := mongo.GetMongo(appCtx, envHandler)
 	if err != nil {
 		log.Fatalf("init mongo: %s", err.Error())
+		panic(err)
 	}
 	defer mongoCollections.Disconnect(appCtx)
 	usersAdapter := users.NewMongoAdapter(mongoCollections.Users, log)
@@ -63,8 +64,9 @@ func main() {
 	// Echo
 	jwtSecret := envHandler.MustEnv(config.ConfJwtSecret)
 	jwtInstance := jwt.NewJWT(utcTimer, []byte(jwtSecret), time.Duration(168)*time.Hour)
+
 	authRouter := authMux.NewMux(usersAdapter, utcTimer, jwtInstance)
-	locationRouter := locationMux.NewMux(usersAdapter, usersAdapter, log, utcTimer)
+	meRouter := meMux.NewMux(usersAdapter, utcTimer)
 
 	isDebug := envHandler.MustEnv(config.ConfDebug)
 	validate := validator.New()
@@ -73,9 +75,9 @@ func main() {
 		validate,
 		jwtInstance,
 		webapi.EchoRouters{
-			Swagger:        echoSwagger.WrapHandler,
-			AuthRouter:     authRouter,
-			LocationRouter: locationRouter,
+			Swagger:    echoSwagger.WrapHandler,
+			AuthRouter: authRouter,
+			MeRouter:   meRouter,
 		},
 		log,
 		isDebug == "true")

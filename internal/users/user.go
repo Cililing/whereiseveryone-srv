@@ -17,7 +17,7 @@ import (
 type User struct {
 	// ID is internal ID
 	ID id.ID `bson:"_id"` //nolint:tagliatelle // mongo-id
-	// Username is a unique name of player (nick), used for login as well
+	// Username is a unique name of user (nick), used for login as well
 	Username string `bson:"name"`
 	// Password is an encrypted password
 	Password string `bson:"password"`
@@ -32,6 +32,8 @@ type User struct {
 
 	// Location user last location (can be nil)
 	Location *Location `bson:"location"`
+	// User text status (can be empty)
+	Status string `bson:"status"`
 }
 
 type Adapter interface {

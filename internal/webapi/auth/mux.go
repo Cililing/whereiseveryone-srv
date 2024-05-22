@@ -150,3 +150,5 @@ func (m *mux) logIn(c echo.Context) error {
 		RefreshToken: refresh,
 	})
 }
+
+// TODO: Add refresh-token endpoint.

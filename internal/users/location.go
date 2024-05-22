@@ -16,6 +16,12 @@ type Location struct {
 	Longitude float64 `bson:"longitude"`
 	// Latitude
 	Latitude float64 `bson:"latitude"`
+	// Altitude
+	Altitude float64 `bson:"altitude,omitempty"`
+	// Bearing
+	Bearing float64 `bson:"bearing,omitempty"`
+	// Accuracy
+	Accuracy float64 `bson:"accuracy,omitempty"`
 	// LastUpdate
 	LastUpdate time.Time `bson:"last_update"`
 }
