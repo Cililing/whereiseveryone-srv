@@ -28,6 +28,10 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
+//@securityDefinitions.apikey Bearer
+//@in header
+//@name Authorization
+
 // @BasePath /api
 
 func main() {
@@ -51,7 +55,7 @@ func main() {
 	jwtSecret := env.Env("JWT_SECRET", "jwt-token-123")
 	jwtInstance := jwt.NewJWT(utcTimer, []byte(jwtSecret), time.Duration(168)*time.Hour)
 	authRouter := authMux.NewMux(usersAdapter, utcTimer, jwtInstance)
-	locationRouter := locationMux.NewMux(usersAdapter, log)
+	locationRouter := locationMux.NewMux(usersAdapter, usersAdapter, log, utcTimer)
 
 	isDebug := env.Env("DEBUG", "true")
 	validate := validator.New()
@@ -68,6 +72,6 @@ func main() {
 		isDebug == "true")
 
 	// Start server
-	port := env.Env("APP_PORT", "8080")
+	port := env.Env("APP_PORT", "7070")
 	log.Fatal(e.Start(fmt.Sprintf(":%s", port)))
 }

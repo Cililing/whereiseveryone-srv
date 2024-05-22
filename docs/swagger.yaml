@@ -43,6 +43,9 @@ definitions:
     type: object
   jsonErr.JsonError:
     properties:
+      code:
+        description: Code is desired http code for this error
+        type: integer
       error:
         description: |-
           Err is a golang error returned by the app
@@ -50,6 +53,40 @@ definitions:
         type: string
       message:
         description: Message is human friendly error message
+        type: string
+    type: object
+  location.fetchRequest:
+    properties:
+      nicks:
+        items:
+          type: string
+        type: array
+      uuids:
+        items:
+          type: string
+        type: array
+    type: object
+  location.updateLocationRequest:
+    properties:
+      latitude:
+        type: number
+      longitude:
+        type: number
+    required:
+    - latitude
+    - longitude
+    type: object
+  location.userLocation:
+    properties:
+      id:
+        type: string
+      last_update:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      nick:
         type: string
     type: object
 info:
@@ -129,4 +166,65 @@ paths:
       summary: sign up as a new user
       tags:
       - auth
+  /location/fetch:
+    post:
+      consumes:
+      - application/json
+      description: fetches users location
+      parameters:
+      - description: arrays of ids or nicks
+        in: body
+        name: fetchLocation
+        required: true
+        schema:
+          $ref: '#/definitions/location.fetchRequest'
+      responses:
+        "200":
+          description: list of user
+          schema:
+            items:
+              $ref: '#/definitions/location.userLocation'
+            type: array
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+      security:
+      - Bearer: []
+      summary: returns location of provided users
+      tags:
+      - location
+  /location/update:
+    post:
+      consumes:
+      - application/json
+      description: updates user's location
+      parameters:
+      - description: location
+        in: body
+        name: locationUpdate
+        required: true
+        schema:
+          $ref: '#/definitions/location.updateLocationRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+      security:
+      - Bearer: []
+      summary: update user's location
+      tags:
+      - location
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

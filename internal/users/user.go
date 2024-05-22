@@ -41,10 +41,8 @@ type Adapter interface {
 
 	NewUser(ctx context.Context, user User) (User, error)
 	GetUserByName(ctx context.Context, name string) (User, error)
-	GetUserByID(ctx context.Context, id id.ID) (User, error)
-
-	UserDetails(ctx context.Context, ids []id.ID) (map[id.ID]User, error)
-
+	TranslateNamesToIDs(ctx context.Context, names []string) ([]id.ID, error)
+	UsersDetails(ctx context.Context, ids []id.ID) (map[id.ID]User, error)
 	// UpdateTokens update user tokens (if they are not nil)
 	UpdateTokens(ctx context.Context, userID id.ID, token, refreshedToken *string) error
 }
@@ -119,25 +117,36 @@ func (m *mongoAdapter) GetUserByName(ctx context.Context, name string) (User, er
 	return user, nil
 }
 
-func (m *mongoAdapter) GetUserByID(ctx context.Context, id id.ID) (User, error) {
+func (m *mongoAdapter) TranslateNamesToIDs(ctx context.Context, names []string) ([]id.ID, error) {
 	filter := bson.M{
-		"_id": id,
+		"name": bson.M{
+			"$in": names,
+		},
+	}
+	projection := bson.M{
+		"_id": 1,
 	}
 
-	res := m.coll.FindOne(ctx, filter)
-	if err := res.Err(); err != nil {
-		return User{}, fmt.Errorf("perform query: %w", err)
+	c, err := m.coll.Find(ctx, filter, options.Find().SetProjection(projection))
+	if err != nil {
+		return nil, fmt.Errorf("perform find query: %w", err)
+	}
+	defer c.Close(ctx)
+
+	var users []User // will bind only defined projection
+	if err := c.All(ctx, &users); err != nil {
+		return nil, fmt.Errorf("decode query result with projection: %w", err)
 	}
 
-	var user User
-	if err := res.Decode(&user); err != nil {
-		return User{}, fmt.Errorf("decode query result: %w", err)
+	var res []id.ID
+	for _, u := range users {
+		res = append(res, u.ID)
 	}
 
-	return user, nil
+	return res, nil
 }
 
-func (m *mongoAdapter) UserDetails(ctx context.Context, ids []id.ID) (map[id.ID]User, error) {
+func (m *mongoAdapter) UsersDetails(ctx context.Context, ids []id.ID) (map[id.ID]User, error) {
 	filter := bson.M{
 		"_id": bson.M{
 			"$in": ids,

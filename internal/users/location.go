@@ -21,7 +21,6 @@ type Location struct {
 
 type LocationAdapter interface {
 	UpdateLocation(ctx context.Context, userID id.ID, newLocation Location) error
-	GetLocation(ctx context.Context, userID id.ID) (*Location, error)
 }
 
 type mongoLocationAdapter struct {
@@ -48,24 +47,6 @@ func (l mongoLocationAdapter) UpdateLocation(ctx context.Context, userID id.ID, 
 	}
 
 	return nil
-}
-
-func (l mongoLocationAdapter) GetLocation(ctx context.Context, userID id.ID) (*Location, error) {
-	filter := bson.M{
-		"_id": userID,
-	}
-
-	res := l.userCollection.FindOne(ctx, filter)
-	if err := res.Err(); err != nil {
-		return nil, fmt.Errorf("perform query: %w", err)
-	}
-
-	var user User
-	if err := res.Decode(&user); err != nil {
-		return nil, fmt.Errorf("decode query result: %w", err)
-	}
-
-	return user.Location, nil
 }
 
 var _ LocationAdapter = (*mongoLocationAdapter)(nil)

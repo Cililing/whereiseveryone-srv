@@ -51,15 +51,15 @@ func (m *mux) signUp(c echo.Context) error {
 
 	var request signUpRequest
 	if err := c.Bind(&request); err != nil {
-		return jsonErr.EchoInvalidRequestError(c, err)
+		return jsonErr.EchoInvalidRequestError(err).Echo(c)
 	}
 	if err := c.Validate(request); err != nil {
-		return jsonErr.EchoInvalidRequestError(c, err)
+		return jsonErr.EchoInvalidRequestError(err).Echo(c)
 	}
 
 	encPass, err := crypto.HashPassword(request.Password)
 	if err != nil {
-		return jsonErr.EchoInvalidRequestError(c, err)
+		return jsonErr.EchoInvalidRequestError(err).Echo(c)
 	}
 
 	u := users.User{
@@ -76,19 +76,19 @@ func (m *mux) signUp(c echo.Context) error {
 
 	if u, err = m.userAdapter.NewUser(reqCtx, u); err != nil { // overwrite user for ID and generated data
 		if errors.Is(err, users.ErrUserNameAlreadyExists) {
-			return jsonErr.EchoConflictError(c, err)
+			return jsonErr.EchoConflictError(err).Echo(c)
 		}
 
-		return jsonErr.EchoInternalError(c, err)
+		return jsonErr.EchoInternalError(err).Echo(c)
 	}
 
 	token, refresh, err := m.jwt.GenerateTokens(u.Email, u.Username, u.ID)
 	if err != nil {
-		return jsonErr.EchoInternalError(c, err)
+		return jsonErr.EchoInternalError(err).Echo(c)
 	}
 
 	if err := m.userAdapter.UpdateTokens(reqCtx, u.ID, &token, &refresh); err != nil {
-		return jsonErr.EchoInternalError(c, err)
+		return jsonErr.EchoInternalError(err).Echo(c)
 	}
 
 	return c.JSON(200, authResponse{
@@ -118,31 +118,31 @@ func (m *mux) logIn(c echo.Context) error {
 
 	var request logInRequest
 	if err := c.Bind(&request); err != nil {
-		return jsonErr.EchoInvalidRequestError(c, err)
+		return jsonErr.EchoInvalidRequestError(err).Echo(c)
 	}
 	if err := c.Validate(request); err != nil {
-		return jsonErr.EchoInvalidRequestError(c, err)
+		return jsonErr.EchoInvalidRequestError(err).Echo(c)
 	}
 
 	u, err := m.userAdapter.GetUserByName(reqCtx, request.Name)
 	if err != nil {
 		if errors.Is(err, users.ErrUserNotExists) {
-			return jsonErr.EchoNotFoundError(c, err)
+			return jsonErr.EchoNotFoundError(err).Echo(c)
 		}
-		return jsonErr.EchoInternalError(c, err)
+		return jsonErr.EchoInternalError(err).Echo(c)
 	}
 
 	if err = crypto.VerifyPassword(u.Password, request.Password); err != nil {
-		return jsonErr.EchoForbiddenError(c)
+		return jsonErr.EchoForbiddenError().Echo(c)
 	}
 
 	token, refresh, err := m.jwt.GenerateTokens(u.Email, u.Username, u.ID)
 	if err != nil {
-		return jsonErr.EchoInternalError(c, err)
+		return jsonErr.EchoInternalError(err).Echo(c)
 	}
 
 	if err := m.userAdapter.UpdateTokens(reqCtx, u.ID, &token, &refresh); err != nil {
-		return jsonErr.EchoInternalError(c, err)
+		return jsonErr.EchoInternalError(err).Echo(c)
 	}
 
 	return c.JSON(200, authResponse{
