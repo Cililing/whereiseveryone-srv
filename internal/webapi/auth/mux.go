@@ -3,11 +3,10 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
-	"time"
-
 	"github.com/labstack/echo/v4"
+	"time"
 	"whereiseveryone/internal/users"
+	"whereiseveryone/internal/webapi/jsonErr"
 	"whereiseveryone/pkg/crypto"
 	"whereiseveryone/pkg/id"
 	"whereiseveryone/pkg/jwt"
@@ -33,21 +32,33 @@ func (m *mux) Route(g *echo.Group, _ echo.MiddlewareFunc) {
 	g.POST("/login", m.logIn)
 }
 
+// signUp
+//
+// @summary sign up as a new user
+// @description creates a new user
+// @tags auth
+// @accept json
+// @produces json
+// @param userDetails body signUpRequest true "sign up details"
+// @success 200 {object} authResponse
+// @failure 400 {object} jsonErr.JsonError "invalid request"
+// @failure 500 {object} jsonErr.JsonError "internal server error"
+// @router /auth/signup [POST]
 func (m *mux) signUp(c echo.Context) error {
 	reqCtx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(60)*time.Second)
 	defer cancel()
 
 	var request signUpRequest
 	if err := c.Bind(&request); err != nil {
-		return c.String(400, fmt.Sprintf("invalid request: %s", err.Error()))
+		return jsonErr.EchoInvalidRequestError(c, err)
 	}
 	if err := c.Validate(request); err != nil {
-		return c.String(400, fmt.Sprintf("invalid request: %s", err.Error()))
+		return jsonErr.EchoInvalidRequestError(c, err)
 	}
 
 	encPass, err := crypto.HashPassword(request.Password)
 	if err != nil {
-		return c.String(400, fmt.Sprintf("cannot encrypt password: %s", err.Error()))
+		return jsonErr.EchoInvalidRequestError(c, err)
 	}
 
 	u := users.User{
@@ -63,18 +74,16 @@ func (m *mux) signUp(c echo.Context) error {
 	}
 
 	if u, err = m.userAdapter.NewUser(reqCtx, u); err != nil { // overwrite user for ID and generated data
-		return c.String(500, fmt.Sprintf("cannot create user: %s", err.Error()))
+		return jsonErr.EchoInternalError(c, err)
 	}
 
 	token, refresh, err := m.jwt.GenerateTokens(u.Email, u.Username, u.ID)
 	if err != nil {
-		return c.String(500, fmt.Sprintf("cannot generate user token, "+
-			"but the user was created: %s", err.Error()))
+		return jsonErr.EchoInternalError(c, err)
 	}
 
 	if err := m.userAdapter.UpdateTokens(reqCtx, u.ID, &token, &refresh); err != nil {
-		return c.String(500, fmt.Sprintf("cannot update user token, "+
-			"but user was created: %s", err.Error()))
+		return jsonErr.EchoInternalError(c, err)
 	}
 
 	return c.JSON(200, authResponse{
@@ -84,39 +93,51 @@ func (m *mux) signUp(c echo.Context) error {
 	})
 }
 
+// logIn
+//
+// @summary log in
+// @description logs in as an exiting users using login and passowrd
+// @tags auth
+// @accept json
+// @produces json
+// @param userDetails body logInRequest true "login details"
+// @success 200 {object} authResponse
+// @failure 400 {object} jsonErr.JsonError "invalid request"
+// @failure 403 {object} jsonErr.JsonError "forbidden (invalid password)"
+// @failure 404 {object} jsonErr.JsonError "user not exists"
+// @failure 500 {object} jsonErr.JsonError "internal server error"
+// @router /auth/login [POST]
 func (m *mux) logIn(c echo.Context) error {
 	reqCtx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(60)*time.Second)
 	defer cancel()
 
 	var request logInRequest
 	if err := c.Bind(&request); err != nil {
-		return c.String(400, fmt.Sprintf("cannot bind input data: %s", err.Error()))
+		return jsonErr.EchoInvalidRequestError(c, err)
 	}
 	if err := c.Validate(request); err != nil {
-		return c.String(400, fmt.Sprintf("invalid request: %s", err.Error()))
+		return jsonErr.EchoInvalidRequestError(c, err)
 	}
 
 	u, err := m.userAdapter.GetUserByName(reqCtx, request.Name)
 	if err != nil {
 		if errors.Is(err, users.ErrUserNotExists) {
-			return c.String(404, "not exists")
+			return jsonErr.EchoNotFoundError(c, err)
 		}
-		return c.String(500, fmt.Sprintf("cannot find user (internal error): %s", err.Error()))
+		return jsonErr.EchoInternalError(c, err)
 	}
 
 	if err = crypto.VerifyPassword(u.Password, request.Password); err != nil {
-		return c.String(403, fmt.Sprintf("invalid password: %s", err.Error()))
+		return jsonErr.EchoForbiddenError(c)
 	}
 
 	token, refresh, err := m.jwt.GenerateTokens(u.Email, u.Username, u.ID)
 	if err != nil {
-		return c.String(500, fmt.Sprintf("cannot generate user token, "+
-			"but the user was created: %s", err.Error()))
+		return jsonErr.EchoInternalError(c, err)
 	}
 
 	if err := m.userAdapter.UpdateTokens(reqCtx, u.ID, &token, &refresh); err != nil {
-		return c.String(500, fmt.Sprintf("cannot update user token, "+
-			"but user was created: %s", err.Error()))
+		return jsonErr.EchoInternalError(c, err)
 	}
 
 	return c.JSON(200, authResponse{

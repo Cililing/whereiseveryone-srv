@@ -1,4 +1,57 @@
 basePath: /api
+definitions:
+  auth.authResponse:
+    properties:
+      id:
+        description: ID is user id (uuid)
+        type: string
+      refresh_token:
+        description: RefreshToken user refresh token
+        type: string
+      token:
+        description: Token user auth token (Bearer)
+        type: string
+    type: object
+  auth.logInRequest:
+    properties:
+      name:
+        description: Name username
+        type: string
+      password:
+        description: Password user password
+        type: string
+    required:
+    - name
+    - password
+    type: object
+  auth.signUpRequest:
+    properties:
+      email:
+        description: Email user email (not actually used)
+        type: string
+      name:
+        description: Name username, must be unique
+        type: string
+      password:
+        description: Password user password, min 8 characters
+        minLength: 8
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  jsonErr.JsonError:
+    properties:
+      error:
+        description: |-
+          Err is a golang error returned by the app
+          It is removed in production application (TBD)
+        type: string
+      message:
+        description: Message is human friendly error message
+        type: string
+    type: object
 info:
   contact: {}
   description: This is a sample server for WhereIsEveryone
@@ -8,10 +61,68 @@ info:
   title: WhereIsEveryone
   version: "1.0"
 paths:
-  /update:
+  /auth/login:
     post:
-      responses: {}
-      summary: updates user location
+      consumes:
+      - application/json
+      description: logs in as an exiting users using login and passowrd
+      parameters:
+      - description: login details
+        in: body
+        name: userDetails
+        required: true
+        schema:
+          $ref: '#/definitions/auth.logInRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.authResponse'
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+        "403":
+          description: forbidden (invalid password)
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+        "404":
+          description: user not exists
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+      summary: log in
       tags:
-      - Location
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: creates a new user
+      parameters:
+      - description: sign up details
+        in: body
+        name: userDetails
+        required: true
+        schema:
+          $ref: '#/definitions/auth.signUpRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.authResponse'
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonErr.JsonError'
+      summary: sign up as a new user
+      tags:
+      - auth
 swagger: "2.0"
