@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"time"
 
 	"github.com/go-playground/validator"
@@ -15,7 +16,19 @@ import (
 	"whereiseveryone/pkg/jwt"
 	"whereiseveryone/pkg/logger"
 	"whereiseveryone/pkg/timer"
+
+	_ "github.com/swaggo/echo-swagger" // echo-swagger middleware
+	_ "whereiseveryone/docs"
 )
+
+// @title WhereIsEveryone
+// @version 1.0
+// @description This is a sample server for WhereIsEveryone
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @BasePath /api
 
 func main() {
 	appCtx := context.Background()
@@ -43,6 +56,7 @@ func main() {
 	isDebug := env.Env("DEBUG", "true")
 	validate := validator.New()
 	e := webapi.NewEcho(
+		"/api",
 		validate,
 		jwtInstance,
 		webapi.EchoRouters{
@@ -51,6 +65,11 @@ func main() {
 		},
 		log,
 		isDebug == "true")
+
+	// serve docs
+	// TODO: move it to webapi????
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	// Start server
 	port := env.Env("APP_PORT", "8080")
 	log.Fatal(e.Start(fmt.Sprintf(":%s", port)))

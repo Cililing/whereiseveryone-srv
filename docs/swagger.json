@@ -1,0 +1,25 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server for WhereIsEveryone",
+        "title": "WhereIsEveryone",
+        "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/update": {
+            "post": {
+                "tags": [
+                    "Location"
+                ],
+                "summary": "updates user location",
+                "responses": {}
+            }
+        }
+    }
+}
