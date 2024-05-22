@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -49,6 +50,7 @@ type Adapter interface {
 }
 
 var ErrUserNotExists = mongo.ErrNoDocuments
+var ErrUserNameAlreadyExists = errors.New("username is already in use")
 
 type mongoAdapter struct {
 	LocationAdapter
@@ -85,6 +87,14 @@ func (m *mongoAdapter) NewUser(ctx context.Context, user User) (User, error) {
 	user.ID = id.NewID()
 	_, err := m.coll.InsertOne(ctx, user)
 	if err != nil {
+		var writeErr mongo.WriteException
+		if errors.As(err, &writeErr) {
+			for _, innerErr := range writeErr.WriteErrors {
+				if innerErr.Code == 11000 { // duplicate err
+					return User{}, ErrUserNameAlreadyExists
+				}
+			}
+		}
 		return User{}, fmt.Errorf("create a new user: %w", err)
 	}
 

@@ -109,6 +109,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/jsonErr.JsonError"
                         }
                     },
+                    "409": {
+                        "description": "conflict (user with such a name exists)",
+                        "schema": {
+                            "$ref": "#/definitions/jsonErr.JsonError"
+                        }
+                    },
                     "500": {
                         "description": "internal server error",
                         "schema": {

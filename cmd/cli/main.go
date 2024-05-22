@@ -20,7 +20,7 @@ func main() {
 	mongoUser := env.Env("MONGO_USER", "root")
 	mongoPassword := env.Env("MONGO_PASSWORD", "password123")
 	mongoDB := env.Env("MONGO_DB", "whereiseveryone")
-	mongoCollections, err := mongo.NewMongo(appCtx, mongoURI, mongoAuthDB, mongoUser, mongoPassword, mongoDB)
+	mongoCollections, err := mongo.NewMongoWithPassword(appCtx, mongoDB, mongoURI, mongoAuthDB, mongoUser, mongoPassword)
 	if err != nil {
 		log.Fatalf("init mongo: %s", err.Error())
 	}

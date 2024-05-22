@@ -34,6 +34,7 @@ func GetJWTToken(c echo.Context) (jwt.SignedToken, error) {
 }
 
 type EchoRouters struct {
+	Swagger        echo.HandlerFunc
 	AuthRouter     Router
 	LocationRouter Router
 }
@@ -73,6 +74,7 @@ func NewEcho(
 
 	basePathGroup := e.Group(basePath)
 
+	e.GET("/swagger/*", routers.Swagger)
 	authRouter := basePathGroup.Group("/auth")
 	locationRouter := basePathGroup.Group("/location", authMiddleware)
 
