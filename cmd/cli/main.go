@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-
 	"whereiseveryone/cmd/cli/commands"
 	"whereiseveryone/internal/mongo"
 	"whereiseveryone/pkg/env"
@@ -14,19 +13,18 @@ func main() {
 	appCtx := context.Background()
 	log := logger.NewLogger()
 	utcTimer := timer.NewUTCTimer()
-
-	mongoURI := env.Env("MONGO_URI", "mongodb://localhost:27017")
-	mongoAuthDB := env.Env("MONGO_AUTH_DB", "admin")
-	mongoUser := env.Env("MONGO_USER", "root")
-	mongoPassword := env.Env("MONGO_PASSWORD", "password123")
-	mongoDB := env.Env("MONGO_DB", "whereiseveryone")
-	mongoCollections, err := mongo.NewMongoWithPassword(appCtx, mongoDB, mongoURI, mongoAuthDB, mongoUser, mongoPassword)
+	envHandler, err := env.NewHandler("./.env/cloud.json")
 	if err != nil {
-		log.Fatalf("init mongo: %s", err.Error())
+		log.Fatalf("loading config: %s", err.Error())
+	}
+
+	mongoCollections, err := mongo.GetMongo(appCtx, envHandler)
+	if err != nil {
+		log.Fatalf("connecting with mongo: %s", err.Error())
 	}
 
 	cmd := commands.NewCommandApp(log, utcTimer, mongoCollections)
 	if err := cmd.ExecuteContext(appCtx); err != nil {
-		log.Fatal(err)
+		log.Fatalf("executing command: %s", err.Error())
 	}
 }

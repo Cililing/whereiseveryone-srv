@@ -5,6 +5,7 @@ import (
 	"fmt"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"time"
+	"whereiseveryone/internal/config"
 
 	"github.com/go-playground/validator"
 	"whereiseveryone/internal/mongo"
@@ -28,9 +29,9 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-//@securityDefinitions.apikey Bearer
-//@in header
-//@name Authorization
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
 
 // @BasePath /api
 
@@ -38,26 +39,25 @@ func main() {
 	appCtx := context.Background()
 	log := logger.NewLogger()
 	utcTimer := timer.NewUTCTimer()
+	envHandler, err := env.NewHandler("./.env/cloud.json")
+	if err != nil {
+		log.Fatalf("loading config: %s", err.Error())
+	}
 
 	// Mongo
-	mongoURI := env.Env("MONGO_URI", "mongodb://localhost:27017")
-	mongoAuthDB := env.Env("MONGO_AUTH_DB", "admin")
-	mongoUser := env.Env("MONGO_USER", "root")
-	mongoPassword := env.Env("MONGO_PASSWORD", "password123")
-	mongoDB := env.Env("MONGO_DB", "whereiseveryone")
-	mongoCollections, err := mongo.NewMongoWithPassword(appCtx, mongoDB, mongoURI, mongoAuthDB, mongoUser, mongoPassword)
+	mongoCollections, err := mongo.GetMongo(appCtx, envHandler)
 	if err != nil {
 		log.Fatalf("init mongo: %s", err.Error())
 	}
 	usersAdapter := users.NewMongoAdapter(mongoCollections.Users, log)
 
 	// Echo
-	jwtSecret := env.Env("JWT_SECRET", "jwt-token-123")
+	jwtSecret := envHandler.MustEnv(config.ConfJwtSecret)
 	jwtInstance := jwt.NewJWT(utcTimer, []byte(jwtSecret), time.Duration(168)*time.Hour)
 	authRouter := authMux.NewMux(usersAdapter, utcTimer, jwtInstance)
 	locationRouter := locationMux.NewMux(usersAdapter, usersAdapter, log, utcTimer)
 
-	isDebug := env.Env("DEBUG", "true")
+	isDebug := envHandler.MustEnv(config.ConfDebug)
 	validate := validator.New()
 	e := webapi.NewEcho(
 		"/api",
@@ -72,6 +72,6 @@ func main() {
 		isDebug == "true")
 
 	// Start server
-	port := env.Env("APP_PORT", "7070")
+	port := envHandler.MustEnv(config.ConfAppPort)
 	log.Fatal(e.Start(fmt.Sprintf(":%s", port)))
 }
