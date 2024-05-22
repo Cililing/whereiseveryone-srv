@@ -15,9 +15,6 @@ type Indexable interface {
 
 type Collections struct {
 	Users *mongo.Collection
-	Org   *mongo.Collection
-	Games *mongo.Collection
-	Arts  *mongo.Collection
 }
 
 func NewMongo(ctx context.Context, uri, authDB, user, pass, db string) (*Collections, error) {
@@ -31,23 +28,20 @@ func NewMongo(ctx context.Context, uri, authDB, user, pass, db string) (*Collect
 
 	cl, err := mongo.NewClient(opts)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create mongo client: %w", err)
+		return nil, fmt.Errorf("create mongo client: %w", err)
 	}
 
 	if err := cl.Connect(ctx); err != nil {
-		return nil, fmt.Errorf("cannot connect to the db: %w", err)
+		return nil, fmt.Errorf("connect to the db: %w", err)
 	}
 
 	if err := cl.Ping(ctx, nil); err != nil {
-		return nil, fmt.Errorf("ping db error: %w", err)
+		return nil, fmt.Errorf("ping db: %w", err)
 	}
 
 	appDB := cl.Database(db)
 
 	return &Collections{
 		Users: appDB.Collection("users"),
-		Org:   appDB.Collection("organizations"),
-		Games: appDB.Collection("games"),
-		Arts:  appDB.Collection("articles"),
 	}, nil
 }

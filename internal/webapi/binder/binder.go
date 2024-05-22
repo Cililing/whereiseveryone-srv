@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"pokergo/internal/webapi"
-	"pokergo/pkg/id"
-	"pokergo/pkg/jwt"
+	"whereiseveryone/internal/webapi"
+	"whereiseveryone/pkg/id"
+	"whereiseveryone/pkg/jwt"
 )
 
 // BaseContext is interface over Context without generic type

@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
-	"pokergo/pkg/jwt"
-	"pokergo/pkg/logger"
+	"whereiseveryone/pkg/jwt"
+	"whereiseveryone/pkg/logger"
 )
 
 type Router interface {
@@ -35,9 +35,6 @@ func GetJWTToken(c echo.Context) (jwt.SignedToken, error) {
 
 type EchoRouters struct {
 	AuthRouter Router
-	OrgRouter  Router
-	GameRouter Router
-	NewsRouter Router
 }
 
 func NewEcho(
@@ -51,7 +48,8 @@ func NewEcho(
 	e.Debug = debug
 	e.Validator = &echoValidator{validator: validate}
 
-	auth := func(next echo.HandlerFunc) echo.HandlerFunc {
+	// TODO(pmaterna): Pass this handler for auth-requiring groups
+	_ = func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			jwtToken := c.Request().Header.Get("Authorization")
 			if jwtToken == "" {
@@ -73,14 +71,8 @@ func NewEcho(
 	}
 
 	authRouter := e.Group("/auth")
-	orgRouter := e.Group("/org", auth)
-	gameRouter := e.Group("/game", auth)
-	newsRouter := e.Group("/news")
 
 	routers.AuthRouter.Route(authRouter)
-	routers.OrgRouter.Route(orgRouter)
-	routers.GameRouter.Route(gameRouter)
-	routers.NewsRouter.Route(newsRouter)
 
 	e.GET("health", func(c echo.Context) error {
 		return c.JSON(200, "ok")
@@ -89,21 +81,6 @@ func NewEcho(
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			logger.MakeEchoLogEntry(log, c).Info("incoming request")
-			return next(c)
-		}
-	})
-
-	e.Use()
-
-	// Required for the vue-js framework
-	// better security rules
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// for local development
-			c.Response().Header().Add("Access-Control-Allow-Origin", "http://localhost:3000")
-			c.Response().Header().Add("Access-Control-Allow-Methods", "PUT, POST, PATCH, DELETE, GET")
-			c.Response().Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-
 			return next(c)
 		}
 	})

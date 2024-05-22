@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"pokergo/internal/users"
-	"pokergo/pkg/crypto"
-	"pokergo/pkg/id"
-	"pokergo/pkg/jwt"
-	"pokergo/pkg/timer"
+	"whereiseveryone/internal/users"
+	"whereiseveryone/pkg/crypto"
+	"whereiseveryone/pkg/id"
+	"whereiseveryone/pkg/jwt"
+	"whereiseveryone/pkg/timer"
 )
 
 type mux struct {

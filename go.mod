@@ -1,4 +1,4 @@
-module pokergo
+module whereiseveryone
 
 go 1.18
 

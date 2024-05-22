@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"pokergo/pkg/id"
-	"pokergo/pkg/timer"
+	"whereiseveryone/pkg/id"
+	"whereiseveryone/pkg/timer"
 )
 
 type JWT struct {
@@ -46,11 +46,11 @@ func (j JWT) GenerateTokens(email, username string, id id.ID) (string, string, e
 
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(j.secret)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create token: %w", err)
+		return "", "", fmt.Errorf("create token: %w", err)
 	}
 	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refresh).SignedString(j.secret)
 	if err != nil {
-		return "", "", fmt.Errorf("cannot create refresh token: %w", err)
+		return "", "", fmt.Errorf("create refresh token: %w", err)
 	}
 
 	return token, refreshToken, nil
@@ -65,12 +65,12 @@ func (j JWT) ValidateToken(signed string) (SignedToken, error) {
 		})
 
 	if err != nil {
-		return SignedToken{}, fmt.Errorf("cannot parse token: %w", err)
+		return SignedToken{}, fmt.Errorf("parse token: %w", err)
 	}
 
 	claims, ok := token.Claims.(*SignedToken)
 	if !ok {
-		return SignedToken{}, fmt.Errorf("token is invalid: %w", err)
+		return SignedToken{}, fmt.Errorf("invalid token: %w", err)
 	}
 
 	if claims.ExpiresAt < j.timer.Now().Unix() {
