@@ -1,7 +1,7 @@
 {
   "app.jwtSecret": "jwt-token-123",
   "app.debug": "true",
-  "app.port": "7070",
+  "app.port": "8080",
   "mongo.useCloud": "true",
   "mongo.uri": "whereiseveryone-db.0rdwslz.mongodb.net",
   "mongo.x509": "./.env/X509-cert.pem",

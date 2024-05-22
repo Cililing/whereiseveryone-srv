@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"whereiseveryone/cmd/cli/commands"
 	"whereiseveryone/internal/mongo"
 	"whereiseveryone/pkg/env"
@@ -10,10 +11,13 @@ import (
 )
 
 func main() {
+	configPathFlag := flag.String("config", "./.env/local.json", "config path")
+	flag.Parse()
+	envHandler, err := env.NewHandler(*configPathFlag)
+
 	appCtx := context.Background()
 	log := logger.NewLogger()
 	utcTimer := timer.NewUTCTimer()
-	envHandler, err := env.NewHandler("./.env/cloud.json")
 	if err != nil {
 		log.Fatalf("loading config: %s", err.Error())
 	}

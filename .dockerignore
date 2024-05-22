@@ -1,0 +1,5 @@
+.run
+.github
+docker
+.gitignore
+.golangci.yml

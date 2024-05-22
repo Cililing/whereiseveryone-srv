@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"time"
@@ -36,10 +37,17 @@ import (
 // @BasePath /api
 
 func main() {
-	appCtx := context.Background()
+	// Flags
+	configPathFlag := flag.String("config", "./.env/local.json", "config path")
+	flag.Parse()
+
+	// global dependencies
 	log := logger.NewLogger()
+	log.Infof("using config path: %s", *configPathFlag)
+
+	envHandler, err := env.NewHandler(*configPathFlag)
+	appCtx := context.Background()
 	utcTimer := timer.NewUTCTimer()
-	envHandler, err := env.NewHandler("./.env/cloud.json")
 	if err != nil {
 		log.Fatalf("loading config: %s", err.Error())
 	}
