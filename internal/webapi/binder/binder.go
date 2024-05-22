@@ -22,6 +22,9 @@ type BaseContext interface {
 	TokenData() jwt.SignedToken
 }
 
+type EmptyBody struct {
+}
+
 //nolint:structcheck // binder implementation may contain unused items
 type Context[T any] struct {
 	ctx    context.Context

@@ -14,28 +14,28 @@ definitions:
     type: object
   auth.logInRequest:
     properties:
-      name:
-        description: Name username
-        type: string
       password:
         description: Password user password
         type: string
+      username:
+        description: Username
+        type: string
     required:
-    - name
     - password
+    - username
     type: object
   auth.signUpRequest:
     properties:
-      name:
-        description: Name username, must be unique
-        type: string
       password:
         description: Password user password, min 8 characters
         minLength: 8
         type: string
+      username:
+        description: Username username, must be unique
+        type: string
     required:
-    - name
     - password
+    - username
     type: object
   jsonerr.JSONError:
     properties:
@@ -51,38 +51,55 @@ definitions:
         description: Message is human friendly error message
         type: string
     type: object
-  location.fetchRequest:
+  me.friendDetails:
     properties:
-      nicks:
-        items:
-          type: string
-        type: array
-      uuids:
-        items:
-          type: string
-        type: array
-    type: object
-  location.updateLocationRequest:
-    properties:
-      latitude:
-        type: number
-      longitude:
-        type: number
-    required:
-    - latitude
-    - longitude
-    type: object
-  location.userLocation:
-    properties:
-      id:
+      location:
+        $ref: '#/definitions/me.locationDetails'
+      status:
         type: string
+      username:
+        type: string
+    type: object
+  me.locationDetails:
+    properties:
+      accuracy:
+        type: number
+      altitude:
+        type: number
+      bearing:
+        type: number
       last_update:
+        description: LastUpdate in UTC time
         type: string
       latitude:
         type: number
       longitude:
         type: number
-      nick:
+    type: object
+  me.observeRequest:
+    properties:
+      username:
+        type: string
+    type: object
+  me.updateLocationRequest:
+    properties:
+      accuracy:
+        type: number
+      altitude:
+        type: number
+      bearing:
+        type: number
+      last_update:
+        description: LastUpdate in UTC time
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+    type: object
+  me.updateStatusRequest:
+    properties:
+      status:
         type: string
     type: object
 info:
@@ -162,46 +179,99 @@ paths:
       summary: sign up as a new user
       tags:
       - auth
-  /location/fetch:
-    post:
-      consumes:
+  /me/friends:
+    get:
+      description: returns all details about observed users
+      produces:
       - application/json
-      description: fetches users location
-      parameters:
-      - description: arrays of ids or nicks
-        in: body
-        name: fetchLocation
-        required: true
-        schema:
-          $ref: '#/definitions/location.fetchRequest'
       responses:
         "200":
-          description: list of user
+          description: OK
           schema:
             items:
-              $ref: '#/definitions/location.userLocation'
+              $ref: '#/definitions/me.friendDetails'
             type: array
         "500":
           description: internal server error
           schema:
             $ref: '#/definitions/jsonerr.JSONError'
-      security:
-      - Bearer: []
-      summary: returns location of provided users
+      summary: get friends details
       tags:
-      - location
-  /location/update:
+      - me
+  /me/observe:
+    delete:
+      consumes:
+      - application/json
+      description: stop observing the user, if user is not observed, nothing happen
+      parameters:
+      - description: user to unobserve
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/me.observeRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+        "404":
+          description: requested user not exists
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+      summary: unobserve the user
+      tags:
+      - me
     post:
       consumes:
       - application/json
-      description: updates user's location
+      description: start observing the user, the second user must observe requester
+        too to get his details
       parameters:
-      - description: location
+      - description: user to observe
         in: body
-        name: locationUpdate
+        name: user
         required: true
         schema:
-          $ref: '#/definitions/location.updateLocationRequest'
+          $ref: '#/definitions/me.observeRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+        "404":
+          description: requested user not exists
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+      summary: observe the user
+      tags:
+      - me
+  /me/status:
+    put:
+      consumes:
+      - application/json
+      description: updates logged user status (text status)
+      parameters:
+      - description: update status object
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/me.updateStatusRequest'
+      produces:
+      - application/json
       responses:
         "204":
           description: No Content
@@ -213,11 +283,35 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/jsonerr.JSONError'
-      security:
-      - Bearer: []
-      summary: update user's location
+      summary: update status
       tags:
-      - location
+      - me
+  /me/updateLocation:
+    put:
+      consumes:
+      - application/json
+      description: update logged user location
+      parameters:
+      - description: update location object
+        in: body
+        name: location
+        required: true
+        schema:
+          $ref: '#/definitions/me.updateLocationRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: invalid request
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/jsonerr.JSONError'
+      summary: update location
+      tags:
+      - me
 securityDefinitions:
   Bearer:
     in: header

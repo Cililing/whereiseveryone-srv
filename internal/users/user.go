@@ -4,71 +4,78 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"slices"
 	"whereiseveryone/pkg/id"
 	"whereiseveryone/pkg/logger"
 	"whereiseveryone/pkg/pointers"
+	"whereiseveryone/pkg/timer"
 )
 
 type User struct {
 	// ID is internal ID
 	ID id.ID `bson:"_id"` //nolint:tagliatelle // mongo-id
-	// Username is a unique name of user (nick), used for login as well
-	Username string `bson:"name"`
-	// Password is an encrypted password
-	Password string `bson:"password"`
-	// Token is a jwt-token
-	Token string `bson:"token"`
-	// RefreshToken is jwt-refresh-token
-	RefreshToken string `bson:"refresh_token"`
-	// CreatedAt tells when the user was created
-	CreatedAt time.Time `bson:"created_at"`
-	// UpdatedAt tells when the last update was done
-	UpdatedAt time.Time `bson:"updated_at"`
-
+	// Auth is auth details for the user (JWT)
+	Auth Auth `bson:"auth"`
 	// Location user last location (can be nil)
 	Location *Location `bson:"location"`
+
 	// User text status (can be empty)
 	Status string `bson:"status"`
+
+	// ObservedUsers list of IDs user subscribe
+	// NOTE: The second user should accept subscription.
+	//		 For now, before returning those user data,
+	//		 we need to make sure both users subscribes each other.
+	SubscribedUsers []id.ID `bson:"subscribed_users"`
+}
+
+func (u User) SubscribeUser(id id.ID) bool {
+	return slices.Contains(u.SubscribedUsers, id)
 }
 
 type Adapter interface {
-	LocationAdapter
+	locationAdapter
+	authAdapter
 
 	NewUser(ctx context.Context, user User) (User, error)
-	GetUserByName(ctx context.Context, name string) (User, error)
-	TranslateNamesToIDs(ctx context.Context, names []string) ([]id.ID, error)
-	UsersDetails(ctx context.Context, ids []id.ID) (map[id.ID]User, error)
-	// UpdateTokens update user tokens (if they are not nil)
-	UpdateTokens(ctx context.Context, userID id.ID, token, refreshedToken *string) error
+
+	GetUser(ctx context.Context, userID id.ID) (User, error)
+	GetUsers(ctx context.Context, ids []id.ID) ([]User, error)
+	GetUserByUsername(ctx context.Context, username string) (User, error)
+
+	UpdateStatus(ctx context.Context, user id.ID, newStatus string) error
+	ObserveUser(ctx context.Context, user id.ID, userToObserve id.ID) error
+	UnobserveUser(ctx context.Context, user id.ID, userToUnobserve id.ID) error
 }
 
 var ErrUserNotExists = mongo.ErrNoDocuments
 var ErrUserNameAlreadyExists = errors.New("username is already in use")
 
-type mongoAdapter struct {
-	LocationAdapter
+type mongoUserAdapter struct {
+	locationAdapter
+	authAdapter
 
 	coll   *mongo.Collection
 	logger logger.Logger
 }
 
-func NewMongoAdapter(coll *mongo.Collection, logger logger.Logger) *mongoAdapter {
+func NewMongoAdapter(coll *mongo.Collection, timer timer.Timer, logger logger.Logger) *mongoUserAdapter {
 	locationAdapter := mongoLocationAdapter{coll, logger}
-	return &mongoAdapter{locationAdapter, coll, logger}
+	authAdapter := mongoAuthAdapter{coll, timer, logger}
+
+	return &mongoUserAdapter{locationAdapter, authAdapter, coll, logger}
 }
 
-func (m *mongoAdapter) EnsureIndexes(ctx context.Context) error {
+func (m *mongoUserAdapter) EnsureIndexes(ctx context.Context) error {
 	unique := options.IndexOptions{
 		Unique: pointers.Pointer(true),
 	}
 	userIDIdx := mongo.IndexModel{
 		Keys: bson.M{
-			"name": 1,
+			"auth.name": 1,
 		},
 		Options: &unique,
 	}
@@ -81,7 +88,7 @@ func (m *mongoAdapter) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (m *mongoAdapter) NewUser(ctx context.Context, user User) (User, error) {
+func (m *mongoUserAdapter) NewUser(ctx context.Context, user User) (User, error) {
 	user.ID = id.NewID()
 	_, err := m.coll.InsertOne(ctx, user)
 	if err != nil {
@@ -99,54 +106,25 @@ func (m *mongoAdapter) NewUser(ctx context.Context, user User) (User, error) {
 	return user, nil
 }
 
-func (m *mongoAdapter) GetUserByName(ctx context.Context, name string) (User, error) {
+func (m *mongoUserAdapter) GetUser(ctx context.Context, userID id.ID) (User, error) {
 	filter := bson.M{
-		"name": name,
+		"_id": userID,
 	}
 
 	res := m.coll.FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
-		return User{}, fmt.Errorf("perform query: %w", err)
+		return User{}, fmt.Errorf("find user by id: %w", err)
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return User{}, fmt.Errorf("decode query result: %w", err)
+		return User{}, fmt.Errorf("get user: %w", err)
 	}
 
 	return user, nil
 }
 
-func (m *mongoAdapter) TranslateNamesToIDs(ctx context.Context, names []string) ([]id.ID, error) {
-	filter := bson.M{
-		"name": bson.M{
-			"$in": names,
-		},
-	}
-	projection := bson.M{
-		"_id": 1,
-	}
-
-	c, err := m.coll.Find(ctx, filter, options.Find().SetProjection(projection))
-	if err != nil {
-		return nil, fmt.Errorf("perform find query: %w", err)
-	}
-	defer c.Close(ctx)
-
-	var users []User // will bind only defined projection
-	if err := c.All(ctx, &users); err != nil {
-		return nil, fmt.Errorf("decode query result with projection: %w", err)
-	}
-
-	var res []id.ID
-	for _, u := range users {
-		res = append(res, u.ID)
-	}
-
-	return res, nil
-}
-
-func (m *mongoAdapter) UsersDetails(ctx context.Context, ids []id.ID) (map[id.ID]User, error) {
+func (m *mongoUserAdapter) GetUsers(ctx context.Context, ids []id.ID) ([]User, error) {
 	filter := bson.M{
 		"_id": bson.M{
 			"$in": ids,
@@ -162,40 +140,51 @@ func (m *mongoAdapter) UsersDetails(ctx context.Context, ids []id.ID) (map[id.ID
 		return nil, fmt.Errorf("decode query result: %w", err)
 	}
 
-	res := make(map[id.ID]User, len(users))
-	for _, v := range users {
-		res[v.ID] = v
-	}
-	return res, nil
+	return users, nil
 }
 
-func (m *mongoAdapter) UpdateTokens(ctx context.Context, userID id.ID, token, refreshedToken *string) error {
-	tokens := bson.D{}
-	if token != nil {
-		tokens = append(tokens, bson.E{Key: "token", Value: *token})
-	}
-	if refreshedToken != nil {
-		tokens = append(tokens, bson.E{Key: "refresh_token", Value: *refreshedToken})
-	}
-
-	if len(tokens) == 0 {
-		// nothing to update
-		return nil
-	}
-
+func (m *mongoUserAdapter) GetUserByUsername(ctx context.Context, name string) (User, error) {
 	filter := bson.M{
-		"_id": userID,
+		"auth.name": name,
+	}
+
+	res := m.coll.FindOne(ctx, filter)
+	if err := res.Err(); err != nil {
+		return User{}, fmt.Errorf("perform query: %w", err)
+	}
+
+	var user User
+	if err := res.Decode(&user); err != nil {
+		return User{}, fmt.Errorf("decode query result: %w", err)
+	}
+
+	return user, nil
+}
+
+func (m *mongoUserAdapter) UpdateStatus(ctx context.Context, userId id.ID, newStatus string) error {
+	filter := bson.M{
+		"id": userId,
 	}
 	update := bson.M{
-		"$set": tokens,
+		"$set": bson.D{
+			{Key: "status", Value: newStatus},
+		},
 	}
 
 	_, err := m.coll.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return fmt.Errorf("update tokens: %w", err)
+		return fmt.Errorf("update user's status: %w", err)
 	}
 
 	return nil
 }
 
-var _ Adapter = (*mongoAdapter)(nil)
+func (m *mongoUserAdapter) ObserveUser(ctx context.Context, user id.ID, userToObserve id.ID) error {
+	return nil
+}
+
+func (m *mongoUserAdapter) UnobserveUser(ctx context.Context, user id.ID, userToUnobserve id.ID) error {
+	return nil
+}
+
+var _ Adapter = (*mongoUserAdapter)(nil)

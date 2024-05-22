@@ -1,15 +1,15 @@
 package auth
 
 type signUpRequest struct {
-	// Name username, must be unique
-	Name string `json:"name" validate:"required"`
+	// Username username, must be unique
+	Username string `json:"username" validate:"required"`
 	// Password user password, min 8 characters
 	Password string `json:"password" validate:"required,min=8"`
 }
 
 type logInRequest struct {
-	// Name username
-	Name string `json:"name" validate:"required"`
+	// Username
+	Username string `json:"username" validate:"required"`
 	// Password user password
 	Password string `json:"password" validate:"required"`
 }

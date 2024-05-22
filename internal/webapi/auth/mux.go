@@ -63,14 +63,15 @@ func (m *mux) signUp(c echo.Context) error {
 	}
 
 	u := users.User{
-		ID:           id.ID{}, // stub
-		Username:     request.Name,
-		Password:     encPass,
-		Token:        "",
-		RefreshToken: "",
-		CreatedAt:    m.timer.Now(),
-		UpdatedAt:    m.timer.Now(),
-		Location:     nil,
+		ID: id.ID{}, // stub
+		Auth: users.Auth{
+			Username:     request.Username,
+			Password:     encPass,
+			Token:        "",
+			RefreshToken: "",
+			CreatedAt:    m.timer.Now(),
+			UpdatedAt:    m.timer.Now(),
+		},
 	}
 
 	if u, err = m.userAdapter.NewUser(reqCtx, u); err != nil { // overwrite user for ID and generated data
@@ -81,7 +82,7 @@ func (m *mux) signUp(c echo.Context) error {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}
 
-	token, refresh, err := m.jwt.GenerateTokens(u.Username, u.ID)
+	token, refresh, err := m.jwt.GenerateTokens(u.Auth.Username, u.ID)
 	if err != nil {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}
@@ -123,7 +124,7 @@ func (m *mux) logIn(c echo.Context) error {
 		return jsonerr.EchoInvalidRequestError(err).Echo(c)
 	}
 
-	u, err := m.userAdapter.GetUserByName(reqCtx, request.Name)
+	u, err := m.userAdapter.GetUserByUsername(reqCtx, request.Username)
 	if err != nil {
 		if errors.Is(err, users.ErrUserNotExists) {
 			return jsonerr.EchoNotFoundError(err).Echo(c)
@@ -131,11 +132,11 @@ func (m *mux) logIn(c echo.Context) error {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}
 
-	if err = crypto.VerifyPassword(u.Password, request.Password); err != nil {
+	if err = crypto.VerifyPassword(u.Auth.Password, request.Password); err != nil {
 		return jsonerr.EchoForbiddenError().Echo(c)
 	}
 
-	token, refresh, err := m.jwt.GenerateTokens(u.Username, u.ID)
+	token, refresh, err := m.jwt.GenerateTokens(u.Auth.Username, u.ID)
 	if err != nil {
 		return jsonerr.EchoInternalError(err).Echo(c)
 	}

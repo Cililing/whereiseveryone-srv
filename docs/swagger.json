@@ -116,39 +116,23 @@
                 }
             }
         },
-        "/location/fetch": {
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "fetches users location",
-                "consumes": [
+        "/me/friends": {
+            "get": {
+                "description": "returns all details about observed users",
+                "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "location"
+                    "me"
                 ],
-                "summary": "returns location of provided users",
-                "parameters": [
-                    {
-                        "description": "arrays of ids or nicks",
-                        "name": "fetchLocation",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/location.fetchRequest"
-                        }
-                    }
-                ],
+                "summary": "get friends details",
                 "responses": {
                     "200": {
-                        "description": "list of user",
+                        "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/location.userLocation"
+                                "$ref": "#/definitions/me.friendDetails"
                             }
                         }
                     },
@@ -161,29 +145,157 @@
                 }
             }
         },
-        "/location/update": {
+        "/me/observe": {
             "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "updates user's location",
+                "description": "start observing the user, the second user must observe requester too to get his details",
                 "consumes": [
                     "application/json"
                 ],
                 "tags": [
-                    "location"
+                    "me"
                 ],
-                "summary": "update user's location",
+                "summary": "observe the user",
                 "parameters": [
                     {
-                        "description": "location",
-                        "name": "locationUpdate",
+                        "description": "user to observe",
+                        "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/location.updateLocationRequest"
+                            "$ref": "#/definitions/me.observeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    },
+                    "404": {
+                        "description": "requested user not exists",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "stop observing the user, if user is not observed, nothing happen",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "unobserve the user",
+                "parameters": [
+                    {
+                        "description": "user to unobserve",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/me.observeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    },
+                    "404": {
+                        "description": "requested user not exists",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/status": {
+            "put": {
+                "description": "updates logged user status (text status)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "update status",
+                "parameters": [
+                    {
+                        "description": "update status object",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/me.updateStatusRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/jsonerr.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/updateLocation": {
+            "put": {
+                "description": "update logged user location",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "update location",
+                "parameters": [
+                    {
+                        "description": "update location object",
+                        "name": "location",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/me.updateLocationRequest"
                         }
                     }
                 ],
@@ -228,16 +340,16 @@
         "auth.logInRequest": {
             "type": "object",
             "required": [
-                "name",
-                "password"
+                "password",
+                "username"
             ],
             "properties": {
-                "name": {
-                    "description": "Name username",
-                    "type": "string"
-                },
                 "password": {
                     "description": "Password user password",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Username",
                     "type": "string"
                 }
             }
@@ -245,18 +357,18 @@
         "auth.signUpRequest": {
             "type": "object",
             "required": [
-                "name",
-                "password"
+                "password",
+                "username"
             ],
             "properties": {
-                "name": {
-                    "description": "Name username, must be unique",
-                    "type": "string"
-                },
                 "password": {
                     "description": "Password user password, min 8 characters",
                     "type": "string",
                     "minLength": 8
+                },
+                "username": {
+                    "description": "Username username, must be unique",
+                    "type": "string"
                 }
             }
         },
@@ -277,45 +389,34 @@
                 }
             }
         },
-        "location.fetchRequest": {
+        "me.friendDetails": {
             "type": "object",
             "properties": {
-                "nicks": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "location": {
+                    "$ref": "#/definitions/me.locationDetails"
                 },
-                "uuids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "location.updateLocationRequest": {
-            "type": "object",
-            "required": [
-                "latitude",
-                "longitude"
-            ],
-            "properties": {
-                "latitude": {
-                    "type": "number"
-                },
-                "longitude": {
-                    "type": "number"
-                }
-            }
-        },
-        "location.userLocation": {
-            "type": "object",
-            "properties": {
-                "id": {
+                "status": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "me.locationDetails": {
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "type": "number"
+                },
+                "altitude": {
+                    "type": "number"
+                },
+                "bearing": {
+                    "type": "number"
                 },
                 "last_update": {
+                    "description": "LastUpdate in UTC time",
                     "type": "string"
                 },
                 "latitude": {
@@ -323,8 +424,45 @@
                 },
                 "longitude": {
                     "type": "number"
+                }
+            }
+        },
+        "me.observeRequest": {
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "me.updateLocationRequest": {
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "type": "number"
                 },
-                "nick": {
+                "altitude": {
+                    "type": "number"
+                },
+                "bearing": {
+                    "type": "number"
+                },
+                "last_update": {
+                    "description": "LastUpdate in UTC time",
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                }
+            }
+        },
+        "me.updateStatusRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }

@@ -26,14 +26,14 @@ type Location struct {
 	LastUpdate time.Time `bson:"last_update"`
 }
 
-type LocationAdapter interface {
+type locationAdapter interface {
 	UpdateLocation(ctx context.Context, userID id.ID, newLocation Location) error
 }
 
 type mongoLocationAdapter struct {
 	userCollection *mongo.Collection
 
-	logger.Logger
+	logger logger.Logger
 }
 
 func (l mongoLocationAdapter) UpdateLocation(ctx context.Context, userID id.ID, newLocation Location) error {
@@ -56,4 +56,4 @@ func (l mongoLocationAdapter) UpdateLocation(ctx context.Context, userID id.ID, 
 	return nil
 }
 
-var _ LocationAdapter = (*mongoLocationAdapter)(nil)
+var _ locationAdapter = (*mongoLocationAdapter)(nil)
