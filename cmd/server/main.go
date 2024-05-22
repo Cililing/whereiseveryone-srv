@@ -38,7 +38,7 @@ func main() {
 	jwtSecret := env.Env("JWT_SECRET", "jwt-token-123")
 	jwtInstance := jwt.NewJWT(utcTimer, []byte(jwtSecret), time.Duration(168)*time.Hour)
 	authRouter := authMux.NewMux(usersAdapter, utcTimer, jwtInstance)
-	locationRouter := locationMux.NewMux()
+	locationRouter := locationMux.NewMux(usersAdapter, log)
 
 	isDebug := env.Env("DEBUG", "true")
 	validate := validator.New()

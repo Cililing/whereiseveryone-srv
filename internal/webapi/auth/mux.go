@@ -29,11 +29,11 @@ func NewMux(
 }
 
 func (m *mux) Route(g *echo.Group, _ echo.MiddlewareFunc) {
-	g.POST("/signup", m.SignUp)
-	g.POST("/login", m.LogIn)
+	g.POST("/signup", m.signUp)
+	g.POST("/login", m.logIn)
 }
 
-func (m *mux) SignUp(c echo.Context) error {
+func (m *mux) signUp(c echo.Context) error {
 	reqCtx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(60)*time.Second)
 	defer cancel()
 
@@ -84,7 +84,7 @@ func (m *mux) SignUp(c echo.Context) error {
 	})
 }
 
-func (m *mux) LogIn(c echo.Context) error {
+func (m *mux) logIn(c echo.Context) error {
 	reqCtx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(60)*time.Second)
 	defer cancel()
 
