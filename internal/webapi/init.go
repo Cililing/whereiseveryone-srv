@@ -20,7 +20,7 @@ type echoValidator struct {
 }
 
 func (v *echoValidator) Validate(i any) error {
-	return v.validator.Struct(i) // nolint:wrapcheck  // that's ok (echo framework)
+	return v.validator.Struct(i) //nolint:wrapcheck  // that's ok (echo framework)
 }
 
 func GetJWTToken(c echo.Context) (jwt.SignedToken, error) {

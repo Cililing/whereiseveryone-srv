@@ -4,13 +4,17 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+
 	"whereiseveryone/internal/config"
 	"whereiseveryone/pkg/env"
 )
 
 func GetMongo(appCtx context.Context, env env.Handler) (*Collections, error) {
 	mongoUseCloud := env.MustEnv(config.ConfMongoUseCloud)
-	useCloud, _ := strconv.ParseBool(mongoUseCloud)
+	useCloud, err := strconv.ParseBool(mongoUseCloud)
+	if err != nil {
+		return nil, fmt.Errorf("parse mongo.useCloud flag: %w", err)
+	}
 
 	if useCloud {
 		return CloudMongo(appCtx, env)
@@ -20,7 +24,7 @@ func GetMongo(appCtx context.Context, env env.Handler) (*Collections, error) {
 }
 
 func LocalMongo(appCtx context.Context, env env.Handler) (*Collections, error) {
-	mongoURI := env.MustEnv(config.ConfMongoUri)
+	mongoURI := env.MustEnv(config.ConfMongoURI)
 	mongoAuthDB := env.MustEnv(config.ConfMongoAuthDb)
 	mongoUser := env.MustEnv(config.ConfMongoUser)
 	mongoPassword := env.MustEnv(config.ConfMongoPassword)
@@ -34,7 +38,7 @@ func LocalMongo(appCtx context.Context, env env.Handler) (*Collections, error) {
 }
 
 func CloudMongo(appCtx context.Context, env env.Handler) (*Collections, error) {
-	mongoURI := env.MustEnv(config.ConfMongoUri)
+	mongoURI := env.MustEnv(config.ConfMongoURI)
 	mongoCrt := env.MustEnv(config.ConfMongoX509)
 	mongoDB := env.MustEnv(config.ConfMongoDb)
 

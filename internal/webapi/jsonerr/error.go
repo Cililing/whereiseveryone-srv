@@ -1,11 +1,12 @@
-package jsonErr
+package jsonerr
 
 import (
 	"fmt"
+
 	"github.com/labstack/echo/v4"
 )
 
-type JsonError struct {
+type JSONError struct {
 	// Message is human friendly error message
 	Message string `json:"message"`
 	// Code is desired http code for this error
@@ -15,39 +16,39 @@ type JsonError struct {
 	Err error `json:"error" swaggertype:"string"`
 }
 
-func (h *JsonError) Error() string {
+func (h *JSONError) Error() string {
 	if h.Err != nil {
 		return fmt.Sprintf("%s: %s", h.Message, h.Err)
 	}
 
-	return fmt.Sprintf("%s", h.Message)
+	return h.Message
 }
 
-func (h *JsonError) Echo(context echo.Context) error {
+func (h *JSONError) Echo(context echo.Context) error {
 	return context.JSON(h.Code, h)
 }
 
-func EchoError(code int, message string, err error) *JsonError {
-	httpErr := JsonError{message, code, err}
+func EchoError(code int, message string, err error) *JSONError {
+	httpErr := JSONError{message, code, err}
 	return &httpErr
 }
 
-func EchoInvalidRequestError(err error) *JsonError {
+func EchoInvalidRequestError(err error) *JSONError {
 	return EchoError(400, "invalid request", err)
 }
 
-func EchoNotFoundError(err error) *JsonError {
+func EchoNotFoundError(err error) *JSONError {
 	return EchoError(404, "not found", err)
 }
 
-func EchoInternalError(err error) *JsonError {
+func EchoInternalError(err error) *JSONError {
 	return EchoError(500, "internal error", err)
 }
 
-func EchoForbiddenError() *JsonError {
+func EchoForbiddenError() *JSONError {
 	return EchoError(403, "forbidden", nil)
 }
 
-func EchoConflictError(err error) *JsonError {
+func EchoConflictError(err error) *JSONError {
 	return EchoError(409, "conflict", err)
 }

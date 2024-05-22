@@ -3,9 +3,10 @@ package users
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"time"
 	"whereiseveryone/pkg/id"
 	"whereiseveryone/pkg/logger"
 )

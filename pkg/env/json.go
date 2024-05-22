@@ -10,9 +10,9 @@ type jsonHandler struct {
 	loadedKeys map[Key]string
 }
 
-// NewJsonHandler returns a env-handler from loaded file
+// NewJSONHandler returns a env-handler from loaded file
 // the file MUST contain only string values (no support for nested object)
-func NewJsonHandler(filePath string) (*jsonHandler, error) {
+func NewJSONHandler(filePath string) (*jsonHandler, error) {
 	buf, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("load env-json: %w", err)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 	"time"
-	"whereiseveryone/internal/webapi/jsonErr"
+	"whereiseveryone/internal/webapi/jsonerr"
 
 	"github.com/labstack/echo/v4"
 	"whereiseveryone/internal/webapi"
@@ -22,6 +22,7 @@ type BaseContext interface {
 	TokenData() jwt.SignedToken
 }
 
+//nolint:structcheck // binder implementation may contain unused items
 type Context[T any] struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -41,7 +42,7 @@ func (c Context[T]) Cancel() context.CancelFunc {
 	return c.cancel
 }
 
-func (c Context[T]) Echo() echo.Context { // nolint:ireturn // nolintlint
+func (c Context[T]) Echo() echo.Context { //nolint:ireturn // nolintlint
 	return c.echo
 }
 
@@ -59,11 +60,11 @@ type StructValidator interface {
 
 // BindRequest bind requests returning Context, user data (if requireAuth) and an error.
 // T must be a simple type to be validated (pointers are not validated).
-// Binder returns an jsonErr.JsonError but it doesn't bind the error.
+// Binder returns an jsonerr.JSONError but it doesn't bind the error.
 func BindRequest[T any](
 	c echo.Context,
 	requireAuth bool,
-) (*Context[T], *jsonErr.JsonError) {
+) (*Context[T], *jsonerr.JSONError) {
 	result := &Context[T]{
 		echo: c,
 	}
@@ -77,11 +78,11 @@ func BindRequest[T any](
 	if requireAuth {
 		jwtToken, err := webapi.GetJWTToken(c)
 		if err != nil {
-			return result, jsonErr.EchoForbiddenError()
+			return result, jsonerr.EchoForbiddenError()
 		}
 		requesterID, err := id.FromString(jwtToken.ID)
 		if err != nil {
-			return result, jsonErr.EchoInvalidRequestError(err)
+			return result, jsonerr.EchoInvalidRequestError(err)
 		}
 		result.userID = requesterID
 		result.tokenData = jwtToken
@@ -89,12 +90,12 @@ func BindRequest[T any](
 
 	// Obtain request
 	if err := c.Bind(&t); err != nil {
-		return result, jsonErr.EchoInvalidRequestError(err)
+		return result, jsonerr.EchoInvalidRequestError(err)
 	}
 
 	if val := reflect.ValueOf(t); val.Kind() == reflect.Struct { // don't validate interface{} type
 		if err := c.Validate(t); err != nil {
-			return result, jsonErr.EchoInvalidRequestError(err)
+			return result, jsonerr.EchoInvalidRequestError(err)
 		}
 	}
 

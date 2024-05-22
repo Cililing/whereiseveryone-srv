@@ -12,5 +12,5 @@ func NewHandler(filePath string) (Handler, error) {
 		return NewOsHandler()
 	}
 
-	return NewJsonHandler(filePath)
+	return NewJSONHandler(filePath)
 }
