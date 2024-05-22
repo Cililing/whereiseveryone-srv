@@ -9,7 +9,7 @@ It's a standard go app. You can run it using `go run` etc.
 App uses json-config. The config MUST be a JSON with **only string** entries.
 As a default `./.env/local.json` is used. You can override it with a flag `--config=$filePath`
 
-## Docker
+## Docker - srv
 
 To build a image locally run: `docker build -t whereiseveryone-srv:latest -f docker/Dockerfile .` in project root.
 The command will build the container and will append local `./.env` directory. It can be overwritten later.
@@ -30,7 +30,7 @@ docker run \
     --network=whereiseveryone-net \
     -v "`pwd`/.env:/app/.env" \
     whereiseveryone-srv \
-    /bin/sh -c "/app/app-srv -config=/app/.env/docker.json"
+    /bin/sh -c "/app/app-srv --config=/app/.env/docker.json"
 ```
 
 The command:
@@ -39,6 +39,21 @@ The command:
 * `--network` connects the container to the network (required for connecting with local-docker mongo)
 * `-v` binds local `./env` directory to container `.env` directory
 * `/bin/sh -c ...` command for running the srv with docker-config file
+
+## Docker - cli
+
+On default app image there is a second binary - `cli`. This is a command line app that allows to execute some admin
+commands, like db-management. To use it:
+
+```
+docker run \
+    --network=whereiseveryone-net \
+    -v "`pwd`/.env:/app/.env" \
+    whereiseveryone-srv \
+    /bin/sh -c "/app/app-cli --config=/app/.env/docker.json <command>"
+```
+
+To see list of available commands just run the client without any command.
 
 # Authorization
 
