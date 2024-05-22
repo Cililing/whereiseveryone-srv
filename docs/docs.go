@@ -51,25 +51,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid request",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     },
                     "403": {
                         "description": "forbidden (invalid password)",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     },
                     "404": {
                         "description": "user not exists",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     }
                 }
@@ -106,19 +106,19 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid request",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     },
                     "409": {
                         "description": "conflict (user with such a name exists)",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     }
                 }
@@ -163,7 +163,7 @@ const docTemplate = `{
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     }
                 }
@@ -202,13 +202,13 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid request",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/jsonErr.JsonError"
+                            "$ref": "#/definitions/jsonerr.JSONError"
                         }
                     }
                 }
@@ -253,15 +253,10 @@ const docTemplate = `{
         "auth.signUpRequest": {
             "type": "object",
             "required": [
-                "email",
                 "name",
                 "password"
             ],
             "properties": {
-                "email": {
-                    "description": "Email user email (not actually used)",
-                    "type": "string"
-                },
                 "name": {
                     "description": "Name username, must be unique",
                     "type": "string"
@@ -273,7 +268,7 @@ const docTemplate = `{
                 }
             }
         },
-        "jsonErr.JsonError": {
+        "jsonerr.JSONError": {
             "type": "object",
             "properties": {
                 "code": {

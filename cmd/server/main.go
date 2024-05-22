@@ -49,6 +49,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("init mongo: %s", err.Error())
 	}
+	defer mongoCollections.Disconnect(appCtx)
 	usersAdapter := users.NewMongoAdapter(mongoCollections.Users, log)
 
 	// Echo

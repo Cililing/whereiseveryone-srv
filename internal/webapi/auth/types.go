@@ -5,8 +5,6 @@ type signUpRequest struct {
 	Name string `json:"name" validate:"required"`
 	// Password user password, min 8 characters
 	Password string `json:"password" validate:"required,min=8"`
-	// Email user email (not actually used)
-	Email string `json:"email" validate:"required,email"`
 }
 
 type logInRequest struct {

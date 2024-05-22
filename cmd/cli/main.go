@@ -22,6 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("connecting with mongo: %s", err.Error())
 	}
+	defer mongoCollections.Disconnect(appCtx)
 
 	cmd := commands.NewCommandApp(log, utcTimer, mongoCollections)
 	if err := cmd.ExecuteContext(appCtx); err != nil {

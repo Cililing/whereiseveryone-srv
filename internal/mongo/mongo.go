@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +17,13 @@ type Indexable interface {
 }
 
 type Collections struct {
+	client *mongo.Client
+
 	Users *mongo.Collection
+}
+
+func (c *Collections) Disconnect(ctx context.Context) error {
+	return c.client.Disconnect(ctx)
 }
 
 func NewMongoWithX509Pem(ctx context.Context, db, uri, tlsCertPath string) (*Collections, error) {
@@ -24,10 +31,12 @@ func NewMongoWithX509Pem(ctx context.Context, db, uri, tlsCertPath string) (*Col
 		uri +
 		"/?authSource=%24external&authMechanism=" +
 		"MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=" +
-		tlsCertPath
+		url.QueryEscape(tlsCertPath)
 
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
-	clientOptions := options.Client().ApplyURI(connStr).SetServerAPIOptions(serverAPIOptions)
+	clientOptions := options.Client().
+		ApplyURI(connStr).
+		SetServerAPIOptions(serverAPIOptions)
 
 	return newMongo(ctx, db, clientOptions)
 }
@@ -61,6 +70,7 @@ func newMongo(ctx context.Context, db string, opts *options.ClientOptions) (*Col
 	appDB := cl.Database(db)
 
 	return &Collections{
-		Users: appDB.Collection("users"),
+		client: cl,
+		Users:  appDB.Collection("users"),
 	}, nil
 }
