@@ -87,7 +87,24 @@ When token expires a user must renew it (with `/login`).
 # Development
 
 To run app in development, at first run MongoDB docker container:
-`docker run --name mongodb -p 27017:27017 -e MONGODB_ROOT_PASSWORD=password123 bitnami/mongodb:4.4`
+
+Create the network for further use:
+`docker network create whereiseveryone-net`
+
+Then you can start the Mongo instance:
+`docker run --network=whereiseveryone-net --name mongodb -p 27017:27017 -e MONGODB_ROOT_PASSWORD=password123 bitnami/mongodb:4.4`
+
+You can run MongoExpress (WEB GUI for the database) too:
+```
+docker run --network=whereiseveryone-net \
+    -e ME_CONFIG_MONGODB_SERVER=mongodb \
+    -e ME_CONFIG_MONGODB_ADMINUSERNAME=root \
+    -e ME_CONFIG_MONGODB_ADMINPASSWORD=password123 \
+    -p 8081:8081 mongo-express
+```
+
+Credentials for MongoExpress is `admin:pass`
+
 
 This command will run the mongodb container with root user: `root:password123` on port 27017
 

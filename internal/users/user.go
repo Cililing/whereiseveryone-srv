@@ -75,7 +75,7 @@ func (m *mongoUserAdapter) EnsureIndexes(ctx context.Context) error {
 	}
 	userIDIdx := mongo.IndexModel{
 		Keys: bson.M{
-			"auth.name": 1,
+			"auth.username": 1,
 		},
 		Options: &unique,
 	}
@@ -84,6 +84,8 @@ func (m *mongoUserAdapter) EnsureIndexes(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("create unique name:1 index: %w", err)
 	}
+
+	m.logger.Infof("Created index on field `auth.username`")
 
 	return nil
 }
@@ -107,9 +109,7 @@ func (m *mongoUserAdapter) NewUser(ctx context.Context, user User) (User, error)
 }
 
 func (m *mongoUserAdapter) GetUser(ctx context.Context, userID id.ID) (User, error) {
-	filter := bson.M{
-		"_id": userID,
-	}
+	filter := withUserId(userID)
 
 	res := m.coll.FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
@@ -145,7 +145,7 @@ func (m *mongoUserAdapter) GetUsers(ctx context.Context, ids []id.ID) ([]User, e
 
 func (m *mongoUserAdapter) GetUserByUsername(ctx context.Context, name string) (User, error) {
 	filter := bson.M{
-		"auth.name": name,
+		"auth.username": name,
 	}
 
 	res := m.coll.FindOne(ctx, filter)
@@ -162,9 +162,7 @@ func (m *mongoUserAdapter) GetUserByUsername(ctx context.Context, name string) (
 }
 
 func (m *mongoUserAdapter) UpdateStatus(ctx context.Context, userId id.ID, newStatus string) error {
-	filter := bson.M{
-		"id": userId,
-	}
+	filter := withUserId(userId)
 	update := bson.M{
 		"$set": bson.D{
 			{Key: "status", Value: newStatus},
@@ -180,10 +178,34 @@ func (m *mongoUserAdapter) UpdateStatus(ctx context.Context, userId id.ID, newSt
 }
 
 func (m *mongoUserAdapter) ObserveUser(ctx context.Context, user id.ID, userToObserve id.ID) error {
+	filter := withUserId(user)
+	update := bson.M{
+		"$addToSet": bson.M{
+			"subscribed_users": userToObserve,
+		},
+	}
+
+	_, err := m.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("observe user: %w", err)
+	}
+
 	return nil
 }
 
 func (m *mongoUserAdapter) UnobserveUser(ctx context.Context, user id.ID, userToUnobserve id.ID) error {
+	filter := withUserId(user)
+	update := bson.M{
+		"$pull": bson.M{
+			"subscribed_users": userToUnobserve,
+		},
+	}
+
+	_, err := m.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return fmt.Errorf("observe user: %w", err)
+	}
+
 	return nil
 }
 

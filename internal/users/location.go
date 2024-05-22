@@ -41,9 +41,7 @@ func (l mongoLocationAdapter) UpdateLocation(ctx context.Context, userID id.ID, 
 		bson.E{Key: "location", Value: newLocation},
 	}
 
-	filter := bson.M{
-		"_id": userID,
-	}
+	filter := withUserId(userID)
 	update := bson.M{
 		"$set": location,
 	}

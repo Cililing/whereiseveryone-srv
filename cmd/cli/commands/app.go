@@ -30,7 +30,7 @@ func NewCommandApp(
 			`,
 	}
 
-	rootCmd.PersistentFlags().String("config", "./env/local.json", "path to config file")
+	rootCmd.PersistentFlags().String("config", "./.env/local.json", "path to config file")
 
 	app := &commandApp{
 		Command: rootCmd,

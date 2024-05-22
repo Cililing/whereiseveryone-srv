@@ -52,9 +52,7 @@ func (m mongoAuthAdapter) UpdateTokens(ctx context.Context, userID id.ID, token,
 		return nil
 	}
 
-	filter := bson.M{
-		"_id": userID,
-	}
+	filter := withUserId(userID)
 	update := bson.M{
 		"$set": tokens,
 	}
