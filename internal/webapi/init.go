@@ -12,7 +12,7 @@ import (
 )
 
 type Router interface {
-	Route(g *echo.Group)
+	Route(g *echo.Group, authMiddleware echo.MiddlewareFunc)
 }
 
 type echoValidator struct {
@@ -34,7 +34,8 @@ func GetJWTToken(c echo.Context) (jwt.SignedToken, error) {
 }
 
 type EchoRouters struct {
-	AuthRouter Router
+	AuthRouter     Router
+	LocationRouter Router
 }
 
 func NewEcho(
@@ -48,8 +49,7 @@ func NewEcho(
 	e.Debug = debug
 	e.Validator = &echoValidator{validator: validate}
 
-	// TODO(pmaterna): Pass this handler for auth-requiring groups
-	_ = func(next echo.HandlerFunc) echo.HandlerFunc {
+	authMiddleware := func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			jwtToken := c.Request().Header.Get("Authorization")
 			if jwtToken == "" {
@@ -71,8 +71,10 @@ func NewEcho(
 	}
 
 	authRouter := e.Group("/auth")
+	locationRouter := e.Group("/location", authMiddleware)
 
-	routers.AuthRouter.Route(authRouter)
+	routers.AuthRouter.Route(authRouter, authMiddleware)
+	routers.LocationRouter.Route(locationRouter, authMiddleware)
 
 	e.GET("health", func(c echo.Context) error {
 		return c.JSON(200, "ok")

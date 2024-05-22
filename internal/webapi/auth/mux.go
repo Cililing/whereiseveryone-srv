@@ -28,7 +28,7 @@ func NewMux(
 	return &mux{userAdapter, timer, jwt}
 }
 
-func (m *mux) Route(g *echo.Group) {
+func (m *mux) Route(g *echo.Group, _ echo.MiddlewareFunc) {
 	g.POST("/signup", m.SignUp)
 	g.POST("/login", m.LogIn)
 }
@@ -59,6 +59,7 @@ func (m *mux) SignUp(c echo.Context) error {
 		RefreshToken: "",
 		CreatedAt:    m.timer.Now(),
 		UpdatedAt:    m.timer.Now(),
+		Location:     nil,
 	}
 
 	if u, err = m.userAdapter.NewUser(reqCtx, u); err != nil { // overwrite user for ID and generated data
