@@ -87,7 +87,11 @@ func NewEcho(
 	})
 
 	// TODO: Use logrus for logging instead of this middleware
+	// 		 Config to log this only for debug
+	//		 And disable it on production
 	e.Use(middleware.Logger())
+	e.Use(middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
+	}))
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

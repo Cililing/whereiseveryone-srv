@@ -44,7 +44,7 @@ func main() {
 
 	// global dependencies
 	log := logger.NewLogger()
-	// TODO: Get DEBUG_LEVEL from config
+	// TODO: Get LOGGING_LEVEL from config
 	log.SetLevel(logrus.DebugLevel)
 
 	log.Infof("using config path: %s", *configPathFlag)

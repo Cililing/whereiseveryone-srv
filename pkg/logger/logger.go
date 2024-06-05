@@ -23,9 +23,10 @@ func MakeEchoLogEntry(logger Logger, c echo.Context) *logrus.Entry {
 	}
 
 	return logger.WithFields(logrus.Fields{
-		"at":     time.Now().Format("2006-01-02 15:04:05"),
-		"method": c.Request().Method,
-		"uri":    c.Request().URL.String(),
-		"ip":     c.Request().RemoteAddr,
+		"at":      time.Now().Format("2006-01-02 15:04:05"),
+		"method":  c.Request().Method,
+		"uri":     c.Request().URL.String(),
+		"ip":      c.Request().RemoteAddr,
+		"headers": c.Request().Header,
 	})
 }
