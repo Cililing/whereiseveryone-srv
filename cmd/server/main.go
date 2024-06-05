@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"time"
 	"whereiseveryone/internal/config"
@@ -43,6 +44,7 @@ func main() {
 
 	// global dependencies
 	log := logger.NewLogger()
+	log.SetLevel(logrus.DebugLevel)
 	log.Infof("using config path: %s", *configPathFlag)
 
 	envHandler, err := env.NewHandler(*configPathFlag)
