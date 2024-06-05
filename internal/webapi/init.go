@@ -3,6 +3,7 @@ package webapi
 import (
 	"errors"
 	"fmt"
+	"github.com/labstack/echo/v4/middleware"
 	"strings"
 
 	"github.com/go-playground/validator"
@@ -84,6 +85,9 @@ func NewEcho(
 	e.GET("health", func(c echo.Context) error {
 		return c.JSON(200, "ok")
 	})
+
+	// TODO: Use logrus for logging instead of this middleware
+	e.Use(middleware.Logger())
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

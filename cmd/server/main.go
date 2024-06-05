@@ -44,7 +44,9 @@ func main() {
 
 	// global dependencies
 	log := logger.NewLogger()
+	// TODO: Get DEBUG_LEVEL from config
 	log.SetLevel(logrus.DebugLevel)
+
 	log.Infof("using config path: %s", *configPathFlag)
 
 	envHandler, err := env.NewHandler(*configPathFlag)
@@ -65,6 +67,7 @@ func main() {
 
 	// Echo
 	jwtSecret := envHandler.MustEnv(config.ConfJwtSecret)
+	// TODO: Get VALIDITY from config
 	jwtInstance := jwt.NewJWT(utcTimer, []byte(jwtSecret), time.Duration(168)*time.Hour)
 
 	authRouter := authMux.NewMux(usersAdapter, utcTimer, jwtInstance)
