@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"time"
 	"whereiseveryone/internal/webapi/jsonerr"
+	"whereiseveryone/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 	"whereiseveryone/internal/webapi"
@@ -67,6 +68,7 @@ type StructValidator interface {
 func BindRequest[T any](
 	c echo.Context,
 	requireAuth bool,
+	log logger.Logger,
 ) (*Context[T], *jsonerr.JSONError) {
 	result := &Context[T]{
 		echo: c,
@@ -79,12 +81,15 @@ func BindRequest[T any](
 	result.cancel = cancel
 
 	if requireAuth {
+		log.Debugf("Bind request with auth")
 		jwtToken, err := webapi.GetJWTToken(c)
 		if err != nil {
+			log.Errorf("Failed to get JWT token: %v", err)
 			return result, jsonerr.EchoForbiddenError()
 		}
 		requesterID, err := id.FromString(jwtToken.ID)
 		if err != nil {
+			log.Errorf("Failed to get requester ID: %v", err)
 			return result, jsonerr.EchoInvalidRequestError(err)
 		}
 		result.userID = requesterID
@@ -93,11 +98,13 @@ func BindRequest[T any](
 
 	// Obtain request
 	if err := c.Bind(&t); err != nil {
+		log.Errorf("Failed to bind request: %v", err)
 		return result, jsonerr.EchoInvalidRequestError(err)
 	}
 
 	if val := reflect.ValueOf(t); val.Kind() == reflect.Struct { // don't validate interface{} type
 		if err := c.Validate(t); err != nil {
+			log.Errorf("Failed to validate request: %v", err)
 			return result, jsonerr.EchoInvalidRequestError(err)
 		}
 	}
