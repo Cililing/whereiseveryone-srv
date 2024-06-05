@@ -125,6 +125,10 @@ func (m *mongoUserAdapter) GetUser(ctx context.Context, userID id.ID) (User, err
 }
 
 func (m *mongoUserAdapter) GetUsers(ctx context.Context, ids []id.ID) ([]User, error) {
+	if ids == nil {
+		ids = make([]id.ID, 0)
+	}
+
 	filter := bson.M{
 		"_id": bson.M{
 			"$in": ids,

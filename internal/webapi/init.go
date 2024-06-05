@@ -60,7 +60,7 @@ func NewEcho(
 			}
 
 			if !strings.HasPrefix(jwtToken, "Bearer ") {
-				return c.String(400, "token must start with bearer:")
+				return c.String(400, "token must start with bearer")
 			}
 
 			v, err := jwtInstance.ValidateToken(strings.TrimPrefix(jwtToken, "Bearer "))
@@ -77,7 +77,7 @@ func NewEcho(
 
 	e.GET("/swagger/*", routers.Swagger)
 	authRouter := basePathGroup.Group("/auth")
-	meRouter := basePathGroup.Group("/me")
+	meRouter := basePathGroup.Group("/me", authMiddleware)
 
 	routers.AuthRouter.Route(authRouter, authMiddleware)
 	routers.MeRouter.Route(meRouter, authMiddleware)

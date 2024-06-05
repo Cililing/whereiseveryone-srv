@@ -73,7 +73,8 @@ func BindRequest[T any](
 	var t T
 
 	// Obtain context and cancel
-	reqCtx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(60)*time.Second)
+	// TODO: For debug increase timeout
+	reqCtx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(5)*time.Minute)
 	result.ctx = reqCtx
 	result.cancel = cancel
 
