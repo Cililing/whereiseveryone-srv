@@ -59,11 +59,11 @@ func NewEcho(
 				return c.String(403, "missing jwt token")
 			}
 
-			if !strings.HasPrefix(jwtToken, "Bearer: ") {
+			if !strings.HasPrefix(jwtToken, "Bearer ") {
 				return c.String(400, "token must start with bearer:")
 			}
 
-			v, err := jwtInstance.ValidateToken(strings.TrimPrefix(jwtToken, "Bearer: "))
+			v, err := jwtInstance.ValidateToken(strings.TrimPrefix(jwtToken, "Bearer "))
 			if err != nil {
 				return c.String(403, fmt.Sprintf("invalid token: %s", err.Error()))
 			}
